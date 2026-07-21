@@ -1,5 +1,7 @@
 import type { ByokChatProviderConfig } from '@open-design/contracts';
 
+import { applyServerByokDefaults } from '../byok-server-defaults.js';
+
 export const BYOK_OPENCODE_AGENT_ID = 'byok-opencode';
 export const BYOK_OPENCODE_PROVIDER_ID = 'open-design-byok';
 export const BYOK_OPENCODE_API_KEY_ENV = 'OPEN_DESIGN_BYOK_API_KEY';
@@ -40,16 +42,24 @@ export function opencodeByokModelId(model: string | null | undefined): string | 
 }
 
 export function buildOpenCodeByokProviderConfig(
-  provider: ByokChatProviderConfig | null | undefined,
+  rawProvider: Partial<ByokChatProviderConfig> | null | undefined,
   model: string | null | undefined,
 ): OpenCodeByokProviderConfig | null {
+  // A hosted deployment owns the credential; the client may send a provider
+  // with no apiKey (or none at all). See byok-server-defaults.ts.
+  const provider = applyServerByokDefaults(rawProvider);
   if (!provider || typeof provider !== 'object') return null;
   const protocol = provider.protocol;
+  if (!protocol) return null;
   if (!Object.prototype.hasOwnProperty.call(DEFAULT_BASE_URL_BY_PROTOCOL, protocol)) {
     return null;
   }
   const apiKey = typeof provider.apiKey === 'string' ? provider.apiKey.trim() : '';
-  const rawModel = typeof model === 'string' ? model.trim() : '';
+  const requestedModel = typeof model === 'string' ? model.trim() : '';
+  // Fall back to the operator's configured model so a hosted client that
+  // never picked one still resolves to a deployment.
+  const rawModel =
+    requestedModel || (typeof provider.model === 'string' ? provider.model.trim() : '');
   const defaultBaseUrl = DEFAULT_BASE_URL_BY_PROTOCOL[protocol];
   const baseUrl = normalizeProviderBaseUrl(
     protocol,
@@ -57,7 +67,7 @@ export function buildOpenCodeByokProviderConfig(
       ? provider.baseUrl.trim()
       : defaultBaseUrl,
   );
-  const needsApiKey = requiresApiKey(provider, baseUrl);
+  const needsApiKey = requiresApiKey(protocol, provider.requiresApiKey, baseUrl);
   if (needsApiKey && !apiKey) return null;
   if (!rawModel || rawModel.toLowerCase() === 'default') return null;
   if (!baseUrl) return null;
@@ -121,11 +131,11 @@ function normalizeProviderBaseUrl(
 }
 
 function requiresApiKey(
-  provider: ByokChatProviderConfig,
+  protocol: ByokChatProviderConfig['protocol'],
+  optOut: boolean | undefined,
   baseUrl: string,
 ): boolean {
-  const protocol = provider.protocol;
-  if (provider.requiresApiKey === false) return false;
+  if (optOut === false) return false;
   return protocol !== 'ollama' || !isLocalOllamaBaseUrl(baseUrl);
 }
 

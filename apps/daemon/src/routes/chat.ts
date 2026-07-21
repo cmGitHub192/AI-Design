@@ -36,6 +36,7 @@ import { proxyDispatcherRequestInit, validateUserProviderBaseUrl } from '../conn
 import { googleStreamGenerateContentUrl } from '../integrations/google-models.js';
 import { createRoleMarkerGuard } from '../role-marker-guard.js';
 import { authorizeReasoningEgress, sendReasoningEgressDenial } from '../reasoning-egress.js';
+import { applyServerProxyDefaults } from '../byok-server-defaults.js';
 
 // Allowlist for the `/feedback` route. Mirrors the
 // ChatMessageFeedbackReasonCode union in packages/contracts/src/api/chat.ts.
@@ -1086,8 +1087,10 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
 
   app.post('/api/proxy/azure/stream', async (req, res) => {
     /** @type {Partial<ProxyStreamRequest>} */
-    const proxyBody = req.body || {};
-    if (rejectProxyPluginContext(proxyBody, res)) return;
+    const rawProxyBody = req.body || {};
+    if (rejectProxyPluginContext(rawProxyBody, res)) return;
+    // A hosted deployment owns the credential; the browser need not hold one.
+    const proxyBody = applyServerProxyDefaults('azure', rawProxyBody);
     const { baseUrl, apiKey, model, systemPrompt, messages, maxTokens, apiVersion } =
       proxyBody;
     if (!baseUrl || !apiKey || !model) {
