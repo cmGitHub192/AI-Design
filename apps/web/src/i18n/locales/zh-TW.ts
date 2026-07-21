@@ -505,6 +505,8 @@ export const zhTW: Dict = {
   "settings.maxTokens": "最大 tokens（可選）",
   "settings.maxTokensHint":
     "回應長度上限。每個 model 有調過的預設值（在 placeholder 顯示），留空即使用，輸入數字則覆蓋。",
+  "settings.serverByokTitle": "由管理員設定",
+  "settings.serverByokHint": "此部署已提供模型憑證，不需要 API 金鑰。",
   "settings.apiHint":
     "請求會透過本機 daemon 代理送到你設定的 Base URL。Key 只儲存在目前瀏覽器中，並隨提供方請求送出。",
   "settings.skipForNow": "暫時跳過",

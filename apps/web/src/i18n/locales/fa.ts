@@ -497,6 +497,8 @@ export const fa: Dict = {
   'settings.maxTokens': 'حداکثر توکن (اختیاری)',
   'settings.maxTokensHint': 'سقف طول پاسخ. هر مدل مقدار پیش‌فرض تنظیم‌شدهٔ خود را دارد (در placeholder نمایش داده می‌شود)؛ برای استفاده از آن خالی بگذارید، یا برای جایگزینی، عددی وارد کنید.',
   'settings.apiHint': 'درخواست‌ها از طریق پراکسی daemon محلی به Base URL تنظیم‌شده ارسال می‌شوند. کلید فقط در همین مرورگر ذخیره می‌شود و همراه درخواست‌های ارائه‌دهنده فرستاده می‌شود.',
+  'settings.serverByokTitle': 'توسط مدیر سیستم پیکربندی شده است',
+  'settings.serverByokHint': 'این استقرار اعتبارنامهٔ مدل را فراهم می‌کند — به کلید API نیازی نیست.',
   'settings.skipForNow': 'فعلاً رد کنید',
   'settings.getStarted': 'شروع کنید',
   'settings.envConfigure': 'حالت اجرا',

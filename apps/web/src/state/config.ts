@@ -11,6 +11,7 @@ import type {
   PetConfig,
 } from '../types';
 import { resolveFixedOriginBaseUrl } from './apiProtocols';
+import { adoptServerByokStatus } from './serverByok';
 import {
   DEFAULT_ACCENT_COLOR,
   normalizeAccentColor,
@@ -1175,6 +1176,9 @@ export async function fetchDaemonConfig(): Promise<AppConfigPrefs | null> {
     const res = await fetch('/api/app-config');
     if (!res.ok) return null;
     const data = await res.json();
+    // Same response carries the operator's BYOK posture. Adopting it here
+    // keeps it to one round-trip and lands it before the first Settings paint.
+    adoptServerByokStatus(data);
     return data?.config ?? null;
   } catch {
     return null;

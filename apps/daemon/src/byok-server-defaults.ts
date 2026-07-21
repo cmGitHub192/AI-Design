@@ -1,4 +1,8 @@
-import type { ByokChatProtocol, ByokChatProviderConfig } from '@open-design/contracts';
+import type {
+  ByokChatProtocol,
+  ByokChatProviderConfig,
+  ServerByokStatus,
+} from '@open-design/contracts';
 
 /**
  * Operator-supplied BYOK credential defaults.
@@ -181,4 +185,30 @@ export function hasServerByokCredential(
 ): boolean {
   const defaults = resolveServerByokDefaults(env);
   return Boolean(defaults && defaults.apiKey);
+}
+
+/**
+ * The browser-visible view of this daemon's BYOK posture, for `GET
+ * /api/app-config`.
+ *
+ * Never carries `apiKey` or `baseUrl`. The key is the whole point of the
+ * hosted deployment — the end user must not be able to read it back out of an
+ * endpoint they can already reach. `baseUrl` is withheld too because an Azure
+ * resource URL names the operator's tenant, and the UI has no use for it once
+ * the key field is hidden.
+ *
+ * Reports `configured: false` when the operator declared a protocol but no
+ * key resolved. A half-configured deployment must keep asking the user for a
+ * credential rather than hide the field and fail at request time.
+ */
+export function serverByokStatus(
+  env: NodeJS.ProcessEnv = process.env,
+): ServerByokStatus {
+  const defaults = resolveServerByokDefaults(env);
+  if (!defaults || !defaults.apiKey) return { configured: false };
+  return {
+    configured: true,
+    protocol: defaults.protocol,
+    ...(defaults.model ? { model: defaults.model } : {}),
+  };
 }

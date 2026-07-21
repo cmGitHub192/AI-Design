@@ -497,6 +497,8 @@ export const ptBR: Dict = {
   'settings.maxTokens': 'Tokens máx. (opcional)',
   'settings.maxTokensHint': 'Limite para o comprimento da resposta. Cada modelo tem um valor padrão ajustado (visível no placeholder); deixe em branco para usá-lo ou insira um número para substituí-lo.',
   'settings.apiHint': 'As chamadas passam pelo proxy do daemon local até a Base URL definida. A chave fica armazenada apenas neste navegador e é enviada com as requisições ao provedor.',
+  'settings.serverByokTitle': 'Configurado pelo seu administrador',
+  'settings.serverByokHint': 'Esta implantação fornece a credencial do modelo — nenhuma chave de API é necessária.',
   'settings.skipForNow': 'Pular por enquanto',
   'settings.getStarted': 'Começar',
   'settings.envConfigure': 'Modo de execução',

@@ -1,0 +1,40 @@
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-subtle, var(--bg-2));
+}
+
+.icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--success, var(--accent));
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.model {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--text-2);
+  /* A long deployment name must not widen the settings panel. */
+  overflow-wrap: anywhere;
+}

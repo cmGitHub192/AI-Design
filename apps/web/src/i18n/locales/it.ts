@@ -497,6 +497,8 @@ export const it: Dict = {
   'settings.maxTokens': 'Token massimi (opzionale)',
   'settings.maxTokensHint': 'Limite della lunghezza della risposta. Ogni modello ha un valore predefinito (mostrato nel placeholder); lascia vuoto per usarlo, o inserisci un numero per sostituirlo.',
   'settings.apiHint': 'Le chiamate passano attraverso il proxy del daemon locale verso l\'URL di base definito. La chiave è memorizzata solo in questo browser e inviata con le richieste al provider.',
+  'settings.serverByokTitle': 'Configurato dal tuo amministratore',
+  'settings.serverByokHint': 'Questa installazione fornisce le credenziali del modello: nessuna chiave API necessaria.',
   'settings.skipForNow': 'Salta per ora',
   'settings.getStarted': 'Inizia',
   'settings.envConfigure': 'Modalità di esecuzione',

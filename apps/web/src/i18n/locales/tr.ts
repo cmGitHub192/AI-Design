@@ -497,6 +497,8 @@ export const tr: Dict = {
   'settings.maxTokens': 'Maks. token (isteğe bağlı)',
   'settings.maxTokensHint': 'Yanıt uzunluğu sınırı. Her modelin ayarlanmış bir varsayılanı vardır (yer tutucuda görünür); kullanmak için boş bırakın, üzerine yazmak için bir sayı girin.',
   'settings.apiHint': 'İstekler yerel daemon proxy üzerinden ayarladığınız Base URLye gönderilir. Anahtar yalnızca bu tarayıcıda saklanır ve sağlayıcı istekleriyle birlikte gönderilir.',
+  'settings.serverByokTitle': 'Yöneticiniz tarafından yapılandırıldı',
+  'settings.serverByokHint': 'Bu dağıtım model kimlik bilgisini sağlar — API anahtarı gerekmez.',
   'settings.skipForNow': 'Şimdilik atla',
   'settings.getStarted': 'Başla',
   'settings.envConfigure': 'Yürütme modu',

@@ -497,6 +497,8 @@ export const hu: Dict = {
   'settings.maxTokens': 'Max tokenek (opcionális)',
   'settings.maxTokensHint': 'A válasz hosszának felső határa. Minden modellnek van hangolt alapértelmezése (placeholderként látható); hagyd üresen az alkalmazásához, vagy adj meg számot a felülíráshoz.',
   'settings.apiHint': 'A hívások a helyi daemon proxyn keresztül mennek a beállított Base URL-re. A kulcs csak ebben a böngészőben tárolódik, és a szolgáltatói kérésekkel együtt kerül elküldésre.',
+  'settings.serverByokTitle': 'A rendszergazda állította be',
+  'settings.serverByokHint': 'Ez a telepítés biztosítja a modell hitelesítő adatait – nincs szükség API-kulcsra.',
   'settings.skipForNow': 'Most kihagyom',
   'settings.getStarted': 'Kezdjük',
   'settings.envConfigure': 'Végrehajtási mód',

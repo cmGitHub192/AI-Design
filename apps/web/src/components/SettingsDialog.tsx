@@ -134,6 +134,8 @@ import { MEDIA_PROVIDERS } from '../media/models';
 import { useByokImageModelOptions, useByokVideoModelOptions, useByokSpeechModelOptions } from '../media/aihubmix-image-models';
 import { isVisualStabilityMode } from '../utils/visualStability';
 import { byokProviderRequiresApiKey } from '../utils/byokProvider';
+import { useServerByok } from '../state/serverByok';
+import { ServerByokNotice } from './byok/ServerByokNotice';
 import { XaiOAuthControl } from './XaiOAuthControl';
 import type { MediaProvider } from '../media/models';
 import { Toast } from './Toast';
@@ -3259,6 +3261,12 @@ export function SettingsDialog({
     selectedProvider,
     cfg.baseUrl,
   );
+  // Hosted deployment: the daemon holds the credential for this protocol, so
+  // the key field would ask for something the user does not have and cannot
+  // get. Replace it with a notice rather than rendering a dead input.
+  const serverByok = useServerByok();
+  const serverSuppliesApiKey =
+    serverByok.configured && serverByok.protocol === apiProtocol;
   const byokProviderConfigured = (provider: ByokProviderPreset): boolean => {
     if (provider.custom) {
       return canRunProviderConnectionTest(currentApiProtocolConfig(cfg), {
@@ -5224,6 +5232,13 @@ export function SettingsDialog({
                   }}
                 />
               ) : null}
+              {serverSuppliesApiKey ? (
+                <ServerByokNotice
+                  model={serverByok.model}
+                  title={t('settings.serverByokTitle')}
+                  hint={t('settings.serverByokHint')}
+                />
+              ) : (
               <ByokKeyField
                 apiKey={cfg.apiKey}
                 apiKeyConsoleLink={apiKeyConsoleLink}
@@ -5269,6 +5284,7 @@ export function SettingsDialog({
                 }}
                 onToggleShowApiKey={() => setShowApiKey((v) => !v)}
               />
+              )}
               {showBaseUrlField ? (
                 <ByokProviderBaseUrl
                   apiProtocol={apiProtocol}

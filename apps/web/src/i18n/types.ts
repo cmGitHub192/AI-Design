@@ -449,6 +449,8 @@ export interface Dict {
   'settings.byokSpeechVoice': string;
   'settings.byokModelDefaultOption': string;
   'settings.apiHint': string;
+  'settings.serverByokTitle': string;
+  'settings.serverByokHint': string;
   'settings.skipForNow': string;
   'settings.getStarted': string;
   'settings.envConfigure': string;
