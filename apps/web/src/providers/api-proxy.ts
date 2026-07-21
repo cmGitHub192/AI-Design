@@ -10,6 +10,7 @@ import { projectFileUrl } from './registry';
 import type { StreamHandlers } from './anthropic';
 import { parseSseFrame } from './sse';
 import { isAnthropicSupportedImagePath } from '../utils/apiProtocol';
+import { serverByokCoversProtocol } from '../state/serverByok';
 
 /**
  * Optional per-request context that some protocols thread into the
@@ -40,7 +41,10 @@ export async function streamProxyEndpoint(
   handlers: StreamHandlers,
   context?: ProxyContext,
 ): Promise<void> {
-  if (!cfg.apiKey) {
+  // A hosted deployment answers with the daemon's own credential, so an empty
+  // client key is expected there. Scoped to the protocol the daemon actually
+  // configured; anything else still fails fast here rather than at the proxy.
+  if (!cfg.apiKey && !serverByokCoversProtocol(cfg.apiProtocol ?? '')) {
     handlers.onError(new Error('Missing API key — open Settings and paste one in.'));
     return;
   }

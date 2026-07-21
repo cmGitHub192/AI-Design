@@ -497,6 +497,8 @@ export const esES: Dict = {
   'settings.maxTokens': 'Tokens máx. (opcional)',
   'settings.maxTokensHint': 'Tope para la longitud de la respuesta. Cada modelo tiene un valor por defecto ajustado (visible en el placeholder); déjalo vacío para usarlo o introduce un número para anularlo.',
   'settings.apiHint': 'Las llamadas pasan por el proxy del daemon local hasta la URL base configurada. La clave se guarda solo en este navegador y se envía con las solicitudes al proveedor.',
+  'settings.serverByokTitle': 'Configurado por tu administrador',
+  'settings.serverByokHint': 'Este despliegue aporta la credencial del modelo; no necesitas una clave de API.',
   'settings.skipForNow': 'Omitir por ahora',
   'settings.getStarted': 'Empezar',
   'settings.envConfigure': 'Modo de ejecución',

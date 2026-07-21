@@ -497,6 +497,8 @@ export const ko: Dict = {
   'settings.maxTokens': '최대 토큰 수 (선택 사항)',
   'settings.maxTokensHint': '응답 길이 상한입니다. 각 모델에는 기본값이 미리 조정되어 있으며(placeholder로 표시됨), 비워 두면 그 값을 사용하고 숫자를 입력하면 덮어씁니다.',
   'settings.apiHint': '요청은 로컬 daemon 프록시를 통해 설정한 Base URL로 전송됩니다. 키는 이 브라우저에만 저장되며 제공자 요청과 함께 전송됩니다.',
+  'settings.serverByokTitle': '관리자가 구성함',
+  'settings.serverByokHint': '이 배포가 모델 자격 증명을 제공합니다. API 키가 필요하지 않습니다.',
   'settings.skipForNow': '지금은 건너뛰기',
   'settings.getStarted': '시작하기',
   'settings.envConfigure': '실행 모드',

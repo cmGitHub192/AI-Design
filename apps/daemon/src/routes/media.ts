@@ -16,6 +16,7 @@ import {
   type AIHubMixCatalogType,
 } from '../integrations/aihubmix.js';
 import { isSandboxModeEnabled } from '../sandbox-mode.js';
+import { serverByokStatus } from '../byok-server-defaults.js';
 import type { ToolTokenGrant } from '../tool-tokens.js';
 
 const LONG_MEDIA_PROXY_TIMEOUT_MS = 10 * 60 * 1000;
@@ -474,7 +475,9 @@ export function registerMediaRoutes(app: Express, ctx: RegisterMediaRoutesDeps) 
     }
     try {
       const config = await readAppConfig(RUNTIME_DATA_DIR);
-      res.json({ config });
+      // Operator-owned, environment-derived, and credential-free. Sits beside
+      // `config` rather than inside it because PUT allowlists prefs keys only.
+      res.json({ config, serverByok: serverByokStatus() });
     } catch (err: any) {
       res
         .status(500)

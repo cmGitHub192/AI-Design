@@ -497,6 +497,8 @@ export const id: Dict = {
   'settings.maxTokens': 'Token maks (opsional)',
   'settings.maxTokensHint': 'Batas panjang respons. Setiap model punya default sendiri; kosongkan untuk memakainya, atau isi angka untuk menimpa.',
   'settings.apiHint': 'Panggilan dikirim langsung dari browser ini ke base URL yang kamu atur. Tanpa proxy. Key tidak keluar dari localStorage.',
+  'settings.serverByokTitle': 'Dikonfigurasi oleh administrator Anda',
+  'settings.serverByokHint': 'Deployment ini menyediakan kredensial model — tidak perlu kunci API.',
   'settings.skipForNow': 'Lewati dulu',
   'settings.getStarted': 'Mulai',
   'settings.envConfigure': 'Mode eksekusi',

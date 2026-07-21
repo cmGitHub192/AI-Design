@@ -497,6 +497,8 @@ export const ja: Dict = {
   'settings.maxTokens': '最大トークン（任意）',
   'settings.maxTokensHint': '応答長の上限。各モデルにチューニング済みのデフォルト値があります（プレースホルダーに表示）。空のままにすればそれを使用し、数値を入力すれば上書きされます。',
   'settings.apiHint': 'リクエストはローカル daemon プロキシ経由で設定した Base URL に送信されます。キーはこのブラウザ内にのみ保存され、プロバイダーへのリクエスト時に送信されます。',
+  'settings.serverByokTitle': '管理者によって設定済み',
+  'settings.serverByokHint': 'このデプロイがモデルの認証情報を提供します。API キーは不要です。',
   'settings.skipForNow': '今はスキップ',
   'settings.getStarted': '始める',
   'settings.envConfigure': '実行モード',

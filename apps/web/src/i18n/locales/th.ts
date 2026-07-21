@@ -497,6 +497,8 @@ export const th: Dict = {
   'settings.maxTokens': 'Max tokens (เลือกได้)',
   'settings.maxTokensHint': 'ขีดจำกัดความยาวในการตอบกลับ',
   'settings.apiHint': 'คำสั่งจะถูกส่งผ่าน local daemon proxy ไปยัง base URL ที่คุณตั้งไว้ API Key จะถูกเก็บในเบราว์เซอร์นี้เท่านั้น',
+  'settings.serverByokTitle': 'กำหนดค่าโดยผู้ดูแลระบบของคุณ',
+  'settings.serverByokHint': 'การติดตั้งนี้ให้ข้อมูลรับรองของโมเดลอยู่แล้ว — ไม่ต้องใช้คีย์ API',
   'settings.skipForNow': 'ข้ามไปก่อน',
   'settings.getStarted': 'เริ่มต้นใช้งาน',
   'settings.envConfigure': 'โหมดการรัน',

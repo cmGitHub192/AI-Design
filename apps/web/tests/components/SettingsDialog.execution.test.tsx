@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OpenDesignHostUpdaterStatusSnapshot } from '@open-design/host';
 import { installMockOpenDesignHost } from '@open-design/host/testing';
 import { en } from '../../src/i18n/locales/en';
+import { __setServerByokStatusForTest } from '../../src/state/serverByok';
 
 function optionNames(container: HTMLElement): string[] {
   return within(container).getAllByRole('option').map((option) => {
@@ -548,6 +549,44 @@ describe('SettingsDialog execution settings BYOK interactions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Exit fullscreen' }));
     expect(dialog.classList.contains('settings-fullscreen')).toBe(false);
+  });
+
+  describe('hosted deployment where the daemon owns the credential', () => {
+    afterEach(() => {
+      __setServerByokStatusForTest({ configured: false });
+    });
+
+    it('replaces the API key field with an administrator notice', () => {
+      __setServerByokStatusForTest({
+        configured: true,
+        protocol: 'azure',
+        model: 'gpt-4o',
+      });
+      renderSettingsDialog({ apiProtocol: 'azure' });
+
+      // The user cannot obtain this key, so the field must be gone entirely
+      // rather than rendered empty and required.
+      expect(screen.queryByLabelText('API key')).toBeNull();
+      expect(screen.getByText(en['settings.serverByokTitle'])).toBeTruthy();
+      expect(screen.getByText('gpt-4o')).toBeTruthy();
+    });
+
+    it('still asks for a key on the protocols the operator did not configure', () => {
+      // An Azure-configured daemon must not hide the field for Anthropic;
+      // that request would reach the proxy with no credential at all.
+      __setServerByokStatusForTest({ configured: true, protocol: 'azure' });
+      renderSettingsDialog({ apiProtocol: 'anthropic' });
+
+      expect(screen.getByLabelText('API key')).toBeTruthy();
+      expect(screen.queryByText(en['settings.serverByokTitle'])).toBeNull();
+    });
+
+    it('keeps the key field on a local-first install', () => {
+      renderSettingsDialog({ apiProtocol: 'azure' });
+
+      expect(screen.getByLabelText('API key')).toBeTruthy();
+      expect(screen.queryByText(en['settings.serverByokTitle'])).toBeNull();
+    });
   });
 
   it('renders BYOK provider preset tabs and toggles API key visibility', () => {

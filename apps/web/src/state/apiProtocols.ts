@@ -56,6 +56,17 @@ export const SUGGESTED_MODELS_BY_PROTOCOL: Record<ApiProtocol, readonly string[]
     'mimo-v2.5-pro',
   ],
   azure: [
+    // Azure routes by DEPLOYMENT name, not by model id: the daemon builds
+    // `/openai/deployments/<model>/chat/completions`. These entries are only
+    // a convenience for the common case where a deployment is named after
+    // the model it serves. A deployment named anything else is entered
+    // through the picker's "Custom" option, and "Fetch models" lists what
+    // the configured resource actually exposes — prefer that over this list.
+    'gpt-5.6-terra',
+    'gpt-5.6-luna',
+    'gpt-5.6-sol',
+    'gpt-chat-latest',
+    'model-router',
     'gpt-4o',
     'gpt-4o-mini',
   ],

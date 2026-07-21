@@ -497,6 +497,8 @@ export const de: Dict = {
   'settings.maxTokens': 'Max. Tokens (optional)',
   'settings.maxTokensHint': 'Obergrenze für die Antwortlänge. Jedes Modell hat einen abgestimmten Standardwert (im Platzhalter sichtbar); leer lassen, um ihn zu verwenden, oder eine Zahl eingeben, um ihn zu überschreiben.',
   'settings.apiHint': 'Anfragen werden über den lokalen Daemon-Proxy an die festgelegte Base URL gesendet. Der Schlüssel wird nur in diesem Browser gespeichert und mit Provider-Anfragen gesendet.',
+  'settings.serverByokTitle': 'Von deiner Administration konfiguriert',
+  'settings.serverByokHint': 'Diese Installation stellt die Modell-Zugangsdaten bereit – kein API-Schlüssel nötig.',
   'settings.skipForNow': 'Vorerst überspringen',
   'settings.getStarted': 'Loslegen',
   'settings.envConfigure': 'Ausführungsmodus',

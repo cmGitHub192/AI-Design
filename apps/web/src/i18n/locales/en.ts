@@ -497,6 +497,8 @@ export const en: Dict = {
   'settings.maxTokens': 'Max tokens (optional)',
   'settings.maxTokensHint': 'Cap on the response length. Each model has a tuned default (shown as a placeholder); leave blank to use it, or enter a number to override.',
   'settings.apiHint': 'Stored only in this browser.',
+  'settings.serverByokTitle': 'Configured by your administrator',
+  'settings.serverByokHint': 'This deployment provides the model credential — no API key needed.',
   'settings.skipForNow': 'Skip for now',
   'settings.getStarted': 'Get started',
   'settings.envConfigure': 'Execution mode',

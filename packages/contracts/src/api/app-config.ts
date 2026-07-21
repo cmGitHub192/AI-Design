@@ -1,3 +1,5 @@
+import type { ByokChatProtocol } from './chat.js';
+
 export interface AgentModelPrefs {
   model?: string;
   reasoning?: string;
@@ -63,8 +65,35 @@ export interface AppConfigPrefs {
   recentLinkedDirs?: string[];
 }
 
+/**
+ * Operator-owned BYOK state, derived from the daemon's environment.
+ *
+ * This is deliberately NOT part of `AppConfigPrefs`. Prefs are user-writable
+ * (`UpdateAppConfigRequest` is a `Partial` of them, and the daemon allowlists
+ * the keys it accepts); this is read-only deployment truth. Keeping it a
+ * sibling of `config` in the response means there is no request shape that
+ * could forge it.
+ *
+ * Carries no credential. The daemon reports only whether a key exists and the
+ * non-secret identity of the provider it belongs to, so the UI can stop asking
+ * the user for a key it will never need. See `byok-server-defaults.ts`.
+ */
+export interface ServerByokStatus {
+  /** True when the daemon can serve model traffic without a client credential. */
+  configured: boolean;
+  /** Protocol the operator declared, present only when `configured`. */
+  protocol?: ByokChatProtocol;
+  /** Operator's default model, when they pinned one. Display only. */
+  model?: string;
+}
+
 export interface AppConfigResponse {
   config: AppConfigPrefs;
+  /**
+   * Absent on older daemons; treat a missing value as "not configured" so a
+   * local-first install keeps demanding the user's own key.
+   */
+  serverByok?: ServerByokStatus;
 }
 
 export type UpdateAppConfigRequest = Partial<AppConfigPrefs>;

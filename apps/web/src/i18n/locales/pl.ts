@@ -497,6 +497,8 @@ export const pl: Dict = {
   'settings.maxTokens': 'Maks. liczba tokenów (opcjonalnie)',
   'settings.maxTokensHint': 'Limit długości odpowiedzi. Każdy model ma dostrojony domyślny limit (widoczny jako placeholder); pozostaw puste, aby go użyć, lub wpisz liczbę.',
   'settings.apiHint': 'Wywołania są wysyłane przez lokalny proxy daemon do ustawionego Base URL. Klucz jest przechowywany tylko w tej przeglądarce i wysyłany z żądaniami do dostawcy.',
+  'settings.serverByokTitle': 'Skonfigurowane przez administratora',
+  'settings.serverByokHint': 'To wdrożenie dostarcza poświadczenia modelu — klucz API nie jest potrzebny.',
   'settings.skipForNow': 'Pomiń na razie',
   'settings.getStarted': 'Rozpocznij',
   'settings.envConfigure': 'Tryb wykonywania',

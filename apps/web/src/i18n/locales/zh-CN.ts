@@ -504,6 +504,8 @@ export const zhCN: Dict = {
   "settings.maxTokens": "最大 tokens（可选）",
   "settings.maxTokensHint":
     "响应长度上限。每个 model 有调优过的默认值（在 placeholder 里显示），留空即使用，输入数字则覆盖。",
+  "settings.serverByokTitle": "由管理员配置",
+  "settings.serverByokHint": "此部署已提供模型凭证，无需 API 密钥。",
   "settings.apiHint": "仅保存在本浏览器。",
   "settings.skipForNow": "暂时跳过",
   "settings.getStarted": "开始使用",

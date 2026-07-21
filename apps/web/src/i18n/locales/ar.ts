@@ -497,6 +497,8 @@ export const ar: Dict = {
   'settings.maxTokens': 'أقصى عدد من الرموز (اختياري)',
   'settings.maxTokensHint': 'الحد الأقصى لطول الاستجابة. لكل نموذج قيمة افتراضية؛ اتركها فارغة لاستخدامها، أو أدخل رقماً للتجاوز.',
   'settings.apiHint': 'تُرسل الطلبات عبر وكيل daemon المحلي إلى Base URL الذي تحدده. يُحفظ المفتاح في هذا المتصفح فقط ويُرسل مع طلبات المزود.',
+  'settings.serverByokTitle': 'تم الإعداد بواسطة مسؤول النظام',
+  'settings.serverByokHint': 'يوفّر هذا النشر بيانات اعتماد النموذج — لا حاجة إلى مفتاح API.',
   'settings.skipForNow': 'تخطي الآن',
   'settings.getStarted': 'ابدأ الآن',
   'settings.envConfigure': 'وضع التنفيذ',
