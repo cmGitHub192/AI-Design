@@ -953,12 +953,12 @@ async function checkWebImportIsolation(): Promise<boolean> {
 }
 
 const toolsRootAllowlist = new Map<string, "directory" | "file">([
-  // Keep top-level tools intentionally small. `tools/launcher` was an incoming
-  // Windows shim experiment from PR #683 and is not an active repo boundary.
+  // Keep top-level tools intentionally small. `pack/` and `release/` were the
+  // packaged-Electron build and release-metadata control planes; this product
+  // ships as a web runtime only, so both were removed rather than left as
+  // unmaintained surface.
   ["AGENTS.md", "file"],
   ["dev", "directory"],
-  ["pack", "directory"],
-  ["release", "directory"],
   ["serve", "directory"],
 ]);
 
@@ -973,7 +973,7 @@ async function checkToolsLayout(): Promise<boolean> {
     const repositoryPath = `tools/${entry.name}${entry.isDirectory() ? "/" : ""}`;
 
     if (expected == null) {
-      violations.push(`${repositoryPath} -> tools/ top-level entries are allowlisted; expected only AGENTS.md, dev/, pack/, release/, and serve/`);
+      violations.push(`${repositoryPath} -> tools/ top-level entries are allowlisted; expected only AGENTS.md, dev/, and serve/`);
       continue;
     }
 
