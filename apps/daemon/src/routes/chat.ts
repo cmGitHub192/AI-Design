@@ -37,6 +37,7 @@ import { googleStreamGenerateContentUrl } from '../integrations/google-models.js
 import { createRoleMarkerGuard } from '../role-marker-guard.js';
 import { authorizeReasoningEgress, sendReasoningEgressDenial } from '../reasoning-egress.js';
 import { applyServerProxyDefaults } from '../byok-server-defaults.js';
+import type { ByokChatProtocol } from '@open-design/contracts';
 
 // Allowlist for the `/feedback` route. Mirrors the
 // ChatMessageFeedbackReasonCode union in packages/contracts/src/api/chat.ts.
@@ -177,8 +178,15 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
     };
     req.on('close', abortIfRequestAborted);
     res.on('close', abortIfResponseClosed);
-    const body = req.body || {};
-    const protocol = body.protocol;
+    const rawBody = req.body || {};
+    const protocol = rawBody.protocol;
+    // A hosted deployment owns the credential, so the browser can ask "what
+    // models are available?" without ever holding a key. Scoped to the
+    // operator's declared protocol; anything else is untouched.
+    const body =
+      typeof protocol === 'string'
+        ? applyServerProxyDefaults(protocol as ByokChatProtocol, rawBody)
+        : rawBody;
     if (
       typeof protocol !== 'string' ||
       !['anthropic', 'openai', 'azure', 'google', 'ollama', 'senseaudio', 'aihubmix', 'bedrock'].includes(protocol)
