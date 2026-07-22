@@ -261,7 +261,14 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
     };
     req.on('close', abortIfRequestAborted);
     res.on('close', abortIfResponseClosed);
-    const body = req.body || {};
+    const rawTestBody = req.body || {};
+    // Same hosted-deployment gap as the proxy and discovery routes: the
+    // operator owns the credential, so "Test" must not demand one from a
+    // browser that will never have it.
+    const body =
+      rawTestBody.mode === 'provider' && typeof rawTestBody.protocol === 'string'
+        ? applyServerProxyDefaults(rawTestBody.protocol as ByokChatProtocol, rawTestBody)
+        : rawTestBody;
     try {
       if (body.mode === 'provider') {
         const protocol = body.protocol;

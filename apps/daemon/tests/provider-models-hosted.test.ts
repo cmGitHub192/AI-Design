@@ -135,3 +135,73 @@ describe('provider model discovery with operator-supplied credentials', () => {
     expect(call.url).toContain('mine.openai.azure.com');
   });
 });
+
+/**
+ * The "Test" button in Settings hits a different route than discovery, and
+ * it had the same gap: it demanded baseUrl + apiKey + model from a browser
+ * that, in a hosted deployment, has none of them.
+ */
+describe('connection test with operator-supplied credentials', () => {
+  const realFetch = globalThis.fetch;
+  let server: http.Server;
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    const started = (await startServer({ port: 0, returnServer: true })) as {
+      url: string;
+      server: http.Server;
+    };
+    baseUrl = started.url;
+    server = started.server;
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.OD_BYOK_PROTOCOL;
+    delete process.env.OD_BYOK_API_KEY;
+    delete process.env.OD_BYOK_BASE_URL;
+    delete process.env.OD_BYOK_MODEL;
+  });
+
+  afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
+  it('no longer demands a key the hosted user cannot have', async () => {
+    process.env.OD_BYOK_PROTOCOL = 'azure';
+    process.env.OD_BYOK_API_KEY = 'sk-operator';
+    process.env.OD_BYOK_BASE_URL = 'https://inova.openai.azure.com';
+    process.env.OD_BYOK_MODEL = 'gpt-5.6-terra';
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: FetchInput, init?: FetchInit) => {
+        const url = String(input);
+        if (url.startsWith(baseUrl)) return realFetch(input, init);
+        return Promise.resolve(
+          new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        );
+      }),
+    );
+
+    const res = await fetch(`${baseUrl}/api/test/connection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'provider', protocol: 'azure' }),
+    });
+
+    // The old behaviour was a flat 400 "baseUrl, apiKey, and model are required".
+    expect(res.status).toBe(200);
+    expect(await res.text()).not.toContain('sk-operator');
+  });
+
+  it('still rejects a keyless test on a local-first install', async () => {
+    const res = await fetch(`${baseUrl}/api/test/connection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'provider', protocol: 'azure' }),
+    });
+    expect(res.status).toBe(400);
+  });
+});
