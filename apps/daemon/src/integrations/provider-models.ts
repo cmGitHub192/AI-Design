@@ -126,6 +126,36 @@ function isOpenAiChatModelId(id: string): boolean {
   return !/(?:^|[-_.:])(?:t2i|i2i|t2v|i2v|v2v|tts|asr|ocr)(?:[-_.:]|$)/u.test(normalized);
 }
 
+/**
+ * Azure routes inference by *deployment* name, not by model id: the chat URL
+ * is `/openai/deployments/<name>/chat/completions`. So the useful list is the
+ * resource's deployments, and the option id must be the deployment name even
+ * when it differs from the model it serves.
+ *
+ * The data-plane list endpoint returns `{ data: [{ id, model, status }] }`,
+ * where `id` is the deployment name. Deployments that are not yet succeeded
+ * are dropped — offering one would produce a confusing 404 at send time.
+ */
+function extractAzureDeployments(data: unknown): ProviderModelOption[] {
+  const items = (data as { data?: unknown }).data;
+  if (!Array.isArray(items)) return [];
+  return uniqueModels(
+    items
+      .map((item): ProviderModelOption | null => {
+        if (!item || typeof item !== 'object') return null;
+        const obj = item as { id?: unknown; model?: unknown; status?: unknown };
+        const id = typeof obj.id === 'string' ? obj.id.trim() : '';
+        if (!id) return null;
+        if (typeof obj.status === 'string' && obj.status !== 'succeeded') return null;
+        const model = typeof obj.model === 'string' ? obj.model.trim() : '';
+        // Surface the backing model when the deployment was named something
+        // else, so "prod-chat" is not an opaque choice in the picker.
+        return { id, label: model && model !== id ? `${id} (${model})` : id };
+      })
+      .filter((model): model is ProviderModelOption => model != null),
+  );
+}
+
 function extractOpenAiModels(data: unknown): ProviderModelOption[] {
   const items = (data as { data?: unknown }).data;
   if (!Array.isArray(items)) return [];
@@ -235,7 +265,24 @@ function extractGoogleModels(data: unknown): ProviderModelOption[] {
   );
 }
 
-function providerModelsUrl(protocol: ConnectionTestProtocol, baseUrl: string, apiKey: string): string {
+/**
+ * Data-plane api-version used to list deployments when the caller did not
+ * pin one. Deployment listing is not offered by every api-version, so this
+ * stays separate from the chat default rather than sharing it.
+ */
+const AZURE_DEPLOYMENTS_API_VERSION = '2023-05-15';
+
+function providerModelsUrl(
+  protocol: ConnectionTestProtocol,
+  baseUrl: string,
+  apiKey: string,
+  apiVersion?: string,
+): string {
+  if (protocol === 'azure') {
+    const url = new URL('openai/deployments', `${baseUrl.replace(/\/+$/, '')}/`);
+    url.searchParams.set('api-version', apiVersion?.trim() || AZURE_DEPLOYMENTS_API_VERSION);
+    return url.toString();
+  }
   if (protocol === 'aihubmix') {
     // AIHubMix exposes its chat catalogue on a dedicated endpoint
     // (GET /api/v1/models?type=llm), not the OpenAI /v1/models route.
@@ -259,6 +306,10 @@ function providerModelsHeaders(
   protocol: ConnectionTestProtocol,
   apiKey: string,
 ): Record<string, string> {
+  if (protocol === 'azure') {
+    // Azure authenticates the data plane with `api-key`, not a bearer token.
+    return { 'api-key': apiKey };
+  }
   if (protocol === 'openai' || protocol === 'senseaudio') {
     return { authorization: `Bearer ${apiKey}` };
   }
@@ -288,6 +339,7 @@ function extractModels(protocol: ConnectionTestProtocol, data: unknown): Provide
   if (protocol === 'openai' || protocol === 'senseaudio') return extractOpenAiModels(data);
   if (protocol === 'anthropic') return extractAnthropicModels(data);
   if (protocol === 'google') return extractGoogleModels(data);
+  if (protocol === 'azure') return extractAzureDeployments(data);
   return [];
 }
 
@@ -295,15 +347,6 @@ export async function listProviderModels(
   input: ProviderModelsInput,
 ): Promise<ProviderModelsResponse> {
   const start = Date.now();
-  if (input.protocol === 'azure') {
-    return {
-      ok: false,
-      kind: 'unsupported_protocol',
-      latencyMs: Date.now() - start,
-      detail: 'Azure OpenAI deployment discovery is not supported from the inference endpoint.',
-    };
-  }
-
   const validated = await validateUserProviderBaseUrl(input.baseUrl);
   if (validated.error || !validated.parsed) {
     return {
@@ -325,7 +368,7 @@ export async function listProviderModels(
 
   let url: string;
   try {
-    url = providerModelsUrl(input.protocol, input.baseUrl, input.apiKey);
+    url = providerModelsUrl(input.protocol, input.baseUrl, input.apiKey, input.apiVersion);
   } catch (err) {
     return {
       ok: false,
