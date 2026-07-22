@@ -267,10 +267,16 @@ function extractGoogleModels(data: unknown): ProviderModelOption[] {
 
 /**
  * Data-plane api-version used to list deployments when the caller did not
- * pin one. Deployment listing is not offered by every api-version, so this
- * stays separate from the chat default rather than sharing it.
+ * pin one.
+ *
+ * This stays a preview version on purpose, and separate from the chat
+ * default. `GET /openai/deployments` only exists on the preview surface —
+ * verified against a live resource, every GA version tried (2023-05-15,
+ * 2024-06-01, 2024-10-21) answers 404 "Resource not found" while
+ * 2023-03-15-preview returns the list. Bumping this to match the chat
+ * api-version would silently break discovery again.
  */
-const AZURE_DEPLOYMENTS_API_VERSION = '2023-05-15';
+const AZURE_DEPLOYMENTS_API_VERSION = '2023-03-15-preview';
 
 function providerModelsUrl(
   protocol: ConnectionTestProtocol,

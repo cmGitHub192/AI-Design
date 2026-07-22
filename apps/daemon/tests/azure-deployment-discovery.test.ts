@@ -96,6 +96,22 @@ describe('azure deployment discovery', () => {
     expect(result.models.map((m) => m.id)).toEqual(['ready']);
   });
 
+  it('defaults to the preview api-version, the only one that lists deployments', async () => {
+    // Verified against a live resource: 2023-05-15, 2024-06-01, and
+    // 2024-10-21 all answer 404 "Resource not found" for
+    // GET /openai/deployments; only the preview surface returns the list.
+    // Aligning this with the chat api-version would break discovery again.
+    const seen = stubAzure({ data: [{ id: 'gpt-4o', model: 'gpt-4o', status: 'succeeded' }] });
+
+    await listProviderModels({
+      protocol: 'azure',
+      baseUrl: 'https://inova.openai.azure.com',
+      apiKey: 'sk-operator',
+    });
+
+    expect(seen.at(0)?.url).toContain('api-version=2023-03-15-preview');
+  });
+
   it('honors an operator-pinned api-version', async () => {
     const seen = stubAzure({ data: [{ id: 'gpt-4o', model: 'gpt-4o', status: 'succeeded' }] });
 
