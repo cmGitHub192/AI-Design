@@ -95,11 +95,12 @@
 
   /* Noto Serif Display carries headings and marketing surfaces; Calibri
      carries UI text. Calibri ships with Windows and Office but exists on
-     neither macOS nor Linux, and its licence does not allow self-hosting —
-     Carlito is the metric-compatible open clone, so the fallback keeps the
-     same line lengths instead of reflowing every layout. */
-  --serif: 'Noto Serif Display', 'Noto Serif', Georgia, 'Times New Roman', serif;
-  --sans: Calibri, Carlito, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Roboto, 'Helvetica Neue', Arial, sans-serif;
+     neither macOS nor Linux, so Arial is the fallback there — it is wider
+     than Calibri, which means non-Windows viewers see slightly longer lines
+     rather than an identical layout. Accepted deliberately: Arial is on
+     every machine, which a metric-compatible clone is not. */
+  --serif: var(--font-noto-serif-display), 'Noto Serif Display', Georgia, 'Times New Roman', serif;
+  --sans: Calibri, Arial, Helvetica, sans-serif;
   --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
   --prose-font-size: 15px;
@@ -113,10 +114,12 @@
 /* Dark theme variables — shared between explicit [data-theme="dark"] and the
    OS-level prefers-color-scheme media query (system mode = no data-theme attr).
 
-   The brand sheet defines light only, so these are derived: the neutrals keep
-   a violet cast rather than going grey, and the accent lifts to #a78bfa
-   because #7c3aed on a dark surface falls under 3:1 and stops reading as
-   interactive. */
+   The brand sheet defines light only, so the neutrals here are derived —
+   they keep a violet cast rather than going grey. The brand accents are
+   deliberately NOT re-tuned for dark: #7c3aed carries across both themes so
+   the identity stays one colour. It clears contrast as a button fill under
+   white label text; where it lands as accent-coloured text on the dark
+   surface it sits near 3:1, so prefer the filled treatment there. */
 [data-theme="dark"] {
   color-scheme: dark;
   --bg: #16131f;
@@ -138,11 +141,11 @@
   --text-soft: #7b7291;
   --text-faint: #574f6b;
 
-  --accent: #a78bfa;
-  --accent-strong: #c4b5fd;
+  --accent: #7c3aed;
+  --accent-strong: #6d28d9;
   --accent-soft: #35236b;
   --accent-tint: #241a45;
-  --accent-hover: #c4b5fd;
+  --accent-hover: #6d28d9;
 
   --brand-secondary: #c084fc;
   --brand-gold: #f6d365;
@@ -167,8 +170,8 @@
   --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.3);
 
-  --selected: #a78bfa;
-  --selected-soft: rgba(167, 139, 250, 0.16);
+  --selected: #9333ea;
+  --selected-soft: rgba(147, 51, 234, 0.16);
 
   --code-header-bg: #1d1929;
   --code-body-bg: #17131f;
@@ -197,11 +200,11 @@
     --text-soft: #7b7291;
     --text-faint: #574f6b;
 
-    --accent: #a78bfa;
-    --accent-strong: #c4b5fd;
+    --accent: #7c3aed;
+    --accent-strong: #6d28d9;
     --accent-soft: #35236b;
     --accent-tint: #241a45;
-    --accent-hover: #c4b5fd;
+    --accent-hover: #6d28d9;
 
     --brand-secondary: #c084fc;
     --brand-gold: #f6d365;
@@ -226,8 +229,8 @@
     --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
     --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.3);
 
-    --selected: #a78bfa;
-    --selected-soft: rgba(167, 139, 250, 0.16);
+    --selected: #9333ea;
+    --selected-soft: rgba(147, 51, 234, 0.16);
 
     --code-header-bg: #1d1929;
     --code-body-bg: #17131f;

@@ -8,7 +8,11 @@ const ACCENT_VARS = [
   '--accent-hover',
 ] as const;
 
-export const DEFAULT_ACCENT_COLOR = '#c96442';
+// Disenia primary. Users can override this in Settings → Appearance, so it
+// is the default rather than the only value — but it must stay in sync with
+// the pre-hydration theme script in `app/layout.tsx`, which cannot import
+// from here and therefore repeats the literal.
+export const DEFAULT_ACCENT_COLOR = '#7c3aed';
 export const ACCENT_SWATCHES = [
   DEFAULT_ACCENT_COLOR,
   '#2563eb',
