@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { Noto_Serif_Display } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import { I18nProvider } from '../src/i18n';
 import { AnalyticsProvider } from '../src/analytics/provider';
 import '@excalidraw/excalidraw/index.css';
@@ -13,12 +13,12 @@ import '../src/styles/home/index.css';
  * — the font is Google's, the delivery is ours. That keeps a self-hosted
  * install working offline and stops every viewer's IP reaching a third party.
  *
- * The CSS variable is what `--serif` in tokens.css resolves against.
+ * The CSS variable is what `--display` in tokens.css resolves against.
  */
-const notoSerifDisplay = Noto_Serif_Display({
+const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-noto-serif-display',
+  variable: '--font-manrope',
 });
 
 export const metadata: Metadata = {
@@ -50,7 +50,7 @@ const themeInitScript = `(function(){try{var c=JSON.parse(localStorage.getItem('
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang='en' className={notoSerifDisplay.variable} suppressHydrationWarning>
+    <html lang='en' className={manrope.variable} suppressHydrationWarning>
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: intentional theme-init inline script to prevent FOUC */}

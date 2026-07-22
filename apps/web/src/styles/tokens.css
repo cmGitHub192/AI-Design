@@ -99,7 +99,11 @@
      than Calibri, which means non-Windows viewers see slightly longer lines
      rather than an identical layout. Accepted deliberately: Arial is on
      every machine, which a metric-compatible clone is not. */
-  --serif: var(--font-noto-serif-display), 'Noto Serif Display', Georgia, 'Times New Roman', serif;
+  /* Headings run on Manrope. The token is still named --serif because it is
+     referenced across the stylesheets as "the display face"; the family it
+     resolves to is a brand decision, and renaming the variable would be a
+     wide mechanical diff for no behaviour change. */
+  --serif: var(--font-manrope), 'Manrope', 'Segoe UI', system-ui, sans-serif;
   --sans: Calibri, Arial, Helvetica, sans-serif;
   --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
