@@ -23,7 +23,7 @@ import {
 import { randomUUID } from '../utils/uuid';
 
 const STORAGE_KEY = 'open-design:config';
-const CONFIG_MIGRATION_VERSION = 2;
+const CONFIG_MIGRATION_VERSION = 3;
 
 // Hatched out of the box, but tucked away — the user has to go through
 // either the entry-view "adopt a pet" callout or Settings → Pets to
@@ -738,6 +738,18 @@ export function loadConfig(): AppConfig {
             draftKey.slice(0, separator) as ApiProtocol,
             draft.apiConfig,
           ) || migratedConfig;
+        }
+      }
+      // Migration v3: adopt the Disenia accent. Appearance → accent colour is
+      // user-settable and persisted, so an install that predates the rebrand
+      // carries the inherited orange and would keep overriding the new token
+      // forever. Only the exact old default is rewritten — anyone who picked
+      // their own colour deliberately keeps it.
+      if (parsedMigrationVersion < 3) {
+        const LEGACY_ACCENT = '#c96442';
+        if (normalizeAccentColor(merged.accentColor) === LEGACY_ACCENT) {
+          merged.accentColor = DEFAULT_ACCENT_COLOR;
+          migratedConfig = true;
         }
       }
       merged.configMigrationVersion = CONFIG_MIGRATION_VERSION;

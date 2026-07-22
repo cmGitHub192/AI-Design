@@ -2590,7 +2590,7 @@ function OnboardingView({
           <span
             className="onboarding-cloud__logo od-brand-glyph"
             role="img"
-            aria-label="Open Design"
+            aria-label={t('app.brand')}
           />
           <h1 className="onboarding-cloud__title">{t('settings.onboardingCloudTitle')}</h1>
           <p className="onboarding-cloud__body">{t('settings.onboardingCloudBody')}</p>

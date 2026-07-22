@@ -329,12 +329,12 @@ code {
 }
 
 /* -------- Brand glyph ------------------------------------------------ */
-/* Monochrome Open Design brand mark. The glyph ships as /brand-icon.svg and
-   is masked with --text-strong so it reads as ink in light mode and cream in
-   dark mode. Consumers set their own size and placement. */
+/* The Disenia mark, shipped as /brand-icon.svg. Drawn as a background image
+   rather than a CSS mask: a mask keeps only the alpha channel, so the violet
+   gradient and gold centre would flatten into one solid ink shape. The mark
+   carries its own colour and reads on both themes, so it needs no tinting.
+   Consumers set their own size and placement. */
 .od-brand-glyph {
   display: inline-block;
-  background-color: var(--text-strong);
-  -webkit-mask: url(/brand-icon.svg) center / contain no-repeat;
-  mask: url(/brand-icon.svg) center / contain no-repeat;
+  background: url(/brand-icon.svg) center / contain no-repeat;
 }

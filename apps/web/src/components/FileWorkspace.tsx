@@ -6322,7 +6322,7 @@ function initialPrototypePage(title: string, body = DEFAULT_PROTOTYPE_PAGE_BODY)
   <main>
     <section class="hero">
       <div>
-        <div class="eyebrow">Open Design</div>
+        <div class="eyebrow">Disenia</div>
         <h1>${safeTitle}</h1>
         <p>${safeBody}</p>
       </div>

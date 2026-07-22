@@ -949,7 +949,7 @@ describe('loadConfig', () => {
     expect(config.baseUrl).toBe('https://api.deepseek.com');
     expect(config.model).toBe('deepseek-v4-flash');
     expect(config.apiProtocol).toBe('openai');
-    expect(config.configMigrationVersion).toBe(2);
+    expect(config.configMigrationVersion).toBe(3);
   });
 
   it('migrates retired provider defaults in active, protocol, and provider-draft configs', () => {
@@ -990,7 +990,7 @@ describe('loadConfig', () => {
     expect(
       config.byokProviderConfigDrafts?.[`openai:${moonshotBaseUrl}`]?.apiConfig.model,
     ).toBe('kimi-k2.6');
-    expect(config.configMigrationVersion).toBe(2);
+    expect(config.configMigrationVersion).toBe(3);
   });
 
   it('migrates legacy SiliconFlow Global configs to the known OpenAI preset', () => {
@@ -1009,7 +1009,7 @@ describe('loadConfig', () => {
 
     expect(config.apiProtocol).toBe('openai');
     expect(config.apiProviderBaseUrl).toBe('https://api.siliconflow.com/v1');
-    expect(config.configMigrationVersion).toBe(2);
+    expect(config.configMigrationVersion).toBe(3);
   });
 
   it('backfills the fixed-origin base URL for AIHubMix when persisted empty', () => {
@@ -1191,7 +1191,7 @@ describe('loadConfig', () => {
 
     expect(config.mode).toBe('daemon');
     expect(config.apiProtocol).toBe('openai');
-    expect(config.configMigrationVersion).toBe(2);
+    expect(config.configMigrationVersion).toBe(3);
   });
 
   it('migrates legacy Ollama Cloud configs to an explicit ollama apiProtocol', () => {
@@ -1213,7 +1213,7 @@ describe('loadConfig', () => {
     expect(config.model).toBe('gpt-oss:120b');
     expect(config.apiProtocol).toBe('ollama');
     expect(config.apiProviderBaseUrl).toBe('https://ollama.com');
-    expect(config.configMigrationVersion).toBe(2);
+    expect(config.configMigrationVersion).toBe(3);
   });
 
   it('migrates legacy ollama.com configs with a custom base URL path', () => {
@@ -1335,8 +1335,42 @@ describe('loadConfig', () => {
 
   it('sets an explicit apiProtocol for new default configs', () => {
     expect(DEFAULT_CONFIG.apiProtocol).toBe('anthropic');
-    expect(DEFAULT_CONFIG.configMigrationVersion).toBe(2);
-    expect(DEFAULT_CONFIG.accentColor).toBe('#c96442');
+    expect(DEFAULT_CONFIG.configMigrationVersion).toBe(3);
+    expect(DEFAULT_CONFIG.accentColor).toBe('#7c3aed');
+  });
+
+  describe('migration v3 — Disenia accent', () => {
+    // Appearance → accent colour is persisted, so an install that predates
+    // the rebrand keeps writing the inherited orange as an inline style and
+    // overrides the brand token on every boot.
+    it('rewrites the inherited orange on a pre-rebrand config', () => {
+      store.set(
+        'open-design:config',
+        JSON.stringify({ configMigrationVersion: 2, accentColor: '#c96442' }),
+      );
+
+      expect(loadConfig().accentColor).toBe('#7c3aed');
+    });
+
+    it('leaves a deliberately chosen colour alone', () => {
+      // Only the exact old default is a leftover; anything else was a choice.
+      store.set(
+        'open-design:config',
+        JSON.stringify({ configMigrationVersion: 2, accentColor: '#4F46E5' }),
+      );
+
+      expect(loadConfig().accentColor).toBe('#4f46e5');
+    });
+
+    it('does not re-run on a config already migrated', () => {
+      // A user who picked the old orange *after* the rebrand keeps it.
+      store.set(
+        'open-design:config',
+        JSON.stringify({ configMigrationVersion: 3, accentColor: '#c96442' }),
+      );
+
+      expect(loadConfig().accentColor).toBe('#c96442');
+    });
   });
 });
 
