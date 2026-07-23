@@ -272,6 +272,7 @@ import { effectiveAgentModelChoice } from './agentModelSelection';
 import { mediaExecutionPolicyForProjectMetadata } from '../media/execution-policy';
 import { mediaModelProviderId } from '../media/models';
 import { byokProviderRequiresApiKey } from '../utils/byokProvider';
+import { serverByokSnapshot } from '../state/serverByok';
 import {
   useByokImageModelOptions,
   useByokVideoModelOptions,
@@ -4857,7 +4858,16 @@ export function ProjectView({
       // spawned, surfacing the subscription dialog instead of a mid-run
       // AMR_INSUFFICIENT_BALANCE failure. Sends the home submit already gated
       // (amrGatePrechecked) pass straight through — the user answered there.
-      if (config.mode === 'daemon' && config.agentId === 'amr' && !meta?.amrGatePrechecked) {
+      // A hosted deployment that supplies its own model credential must never
+      // route to (or advertise) the Open Design Cloud service. When the
+      // operator has configured server-side BYOK, skip the AMR balance gate
+      // entirely — there is no AMR wallet in play.
+      if (
+        !serverByokSnapshot().configured &&
+        config.mode === 'daemon' &&
+        config.agentId === 'amr' &&
+        !meta?.amrGatePrechecked
+      ) {
         const gateConversationId = activeConversationId;
         // The gate's await opens a window where the conversation is not yet
         // marked busy. A second send arriving during that window behaves like

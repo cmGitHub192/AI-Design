@@ -92,6 +92,7 @@ import {
 } from './state/config';
 import { createSilentUpdatePreferenceWriter } from './state/silent-update-preference';
 import { applyAppearanceToDocument } from './state/appearance';
+import { useServerByok } from './state/serverByok';
 import { isMacPlatform } from './utils/platform';
 import {
   amrArtifactUpgradeHomeMockOffer,
@@ -1123,6 +1124,32 @@ function AppInner() {
     config.agentId,
     config.onboardingCompleted,
   ]);
+
+  // Hosted-deployment execution default. When the daemon supplies its own
+  // model credential (operator BYOK), the app's inherited default of the
+  // Open Design Cloud agent is wrong: the operator wants runs on THEIR
+  // provider, not a third-party wallet the end user does not have. Force
+  // API/BYOK mode and the operator's protocol so runs route to the
+  // server-supplied provider (e.g. Azure) instead of AMR. A user who then
+  // explicitly picks a local CLI still overrides this on their next choice.
+  const serverByok = useServerByok();
+  useEffect(() => {
+    if (!daemonConfigLoaded) return;
+    if (!serverByok.configured || !serverByok.protocol) return;
+    setConfig((prev) => {
+      if (prev.mode === 'api' && prev.apiProtocol === serverByok.protocol) {
+        return prev;
+      }
+      const next: AppConfig = {
+        ...prev,
+        mode: 'api',
+        apiProtocol: serverByok.protocol,
+      };
+      saveConfig(next);
+      void syncConfigToDaemon(next);
+      return next;
+    });
+  }, [daemonConfigLoaded, serverByok.configured, serverByok.protocol]);
 
   // Auto-pick the default design system the same way — only after daemon
   // config has merged so we never overwrite a daemon-stored selection.
