@@ -1766,7 +1766,37 @@ export function registerProjectRoutes(app: Express, ctx: RegisterProjectRoutesDe
               : undefined,
           connectorProbe: buildConnectorProbe(connectorService),
         });
-        if (resolved && !resolved.ok) {
+        // A stale appliedPluginSnapshotId — one the client remembers from a
+        // previous session, but which the daemon no longer holds after a
+        // restart — must not dead-end project creation. When the snapshot is
+        // gone but the request also names a pluginId, re-resolve from the
+        // plugin alone (which mints a fresh snapshot) instead of 404ing.
+        const snapshotGone =
+          resolved && !resolved.ok && resolved.body?.error?.code === 'snapshot-not-found';
+        const hasPluginId =
+          typeof (resolveBody as Record<string, unknown>).pluginId === 'string' &&
+          ((resolveBody as Record<string, unknown>).pluginId as string).trim().length > 0;
+        if (snapshotGone && hasPluginId) {
+          const { appliedPluginSnapshotId: _stale, ...withoutStaleSnapshot } =
+            resolveBody as Record<string, unknown>;
+          const registryRetry = await loadPluginRegistryView();
+          const retry = resolvePluginSnapshot({
+            db,
+            body: withoutStaleSnapshot,
+            projectId: id,
+            conversationId: cid,
+            registry: registryRetry,
+            activeProjectDesignSystem:
+              typeof normalizedDesignSystemId === 'string' && normalizedDesignSystemId.length > 0
+                ? { id: normalizedDesignSystemId }
+                : undefined,
+            connectorProbe: buildConnectorProbe(connectorService),
+          });
+          if (retry && !retry.ok) {
+            return res.status(retry.status).json(retry.body);
+          }
+          resolvedSnapshot = retry;
+        } else if (resolved && !resolved.ok) {
           if (!explicitPlugin) {
             console.warn(
               `[plugins] default-scenario fallback skipped for project ${id}: ${resolved.body?.error?.code ?? 'unknown'}`,
