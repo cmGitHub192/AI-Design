@@ -4822,7 +4822,12 @@ export function ProjectView({
       const requiresByokPreflight =
         (config.mode === 'api' && config.apiProtocol !== 'bedrock') ||
         (config.mode === 'daemon' && config.agentId === 'byok-opencode');
-      if (requiresByokPreflight && !byokOpenCodeProvider) {
+      // A hosted deployment supplies the provider (key + base URL) from the
+      // daemon's own environment, so the client config is legitimately empty.
+      // Requiring a client-side provider here would dead-end every run on an
+      // operator-credentialed deployment — the daemon completes the config.
+      const operatorSuppliesProvider = serverByokSnapshot().configured;
+      if (requiresByokPreflight && !byokOpenCodeProvider && !operatorSuppliesProvider) {
         trackByokPreflightBlocked(analytics.track, {
           source: 'run',
           reason: byokPreflightBlockReason(config) ?? 'config_invalid',
