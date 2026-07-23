@@ -78,6 +78,44 @@ describe('byok openai rewrite proxy', () => {
     expect(seen.at(0)?.body.max_completion_tokens).toBe(4096);
   });
 
+  // Regression: Azure answers 400 "Function tools with reasoning_effort are not
+  // supported for gpt-5.6-terra in /v1/chat/completions" when OpenCode sends
+  // both on the same turn, which it does on every turn that has tools.
+  it('drops reasoning_effort when the request carries function tools', async () => {
+    const seen = captureUpstream();
+    await post(
+      { 'api-key': 'sk-op', 'x-od-azure-base': 'https://inova.openai.azure.com/openai', 'x-od-azure-api-version': '2024-10-21' },
+      {
+        model: 'gpt-5.6-terra',
+        reasoning_effort: 'medium',
+        verbosity: 'low',
+        tools: [{ type: 'function', function: { name: 'read' } }],
+        tool_choice: 'auto',
+        messages: [{ role: 'user', content: 'hi' }],
+      },
+    );
+
+    const body = seen.at(0)?.body;
+    expect(body).not.toHaveProperty('reasoning_effort');
+    // Only the rejected hint goes; everything the agent needs must survive.
+    expect(body.tools).toHaveLength(1);
+    expect(body.tool_choice).toBe('auto');
+    expect(body.verbosity).toBe('low');
+  });
+
+  it('keeps reasoning_effort when no tools are present', async () => {
+    const seen = captureUpstream();
+    await post(
+      { 'api-key': 'sk-op', 'x-od-azure-base': 'https://inova.openai.azure.com/openai', 'x-od-azure-api-version': '2024-10-21' },
+      {
+        model: 'gpt-5.6-terra',
+        reasoning_effort: 'medium',
+        messages: [{ role: 'user', content: 'hi' }],
+      },
+    );
+    expect(seen.at(0)?.body.reasoning_effort).toBe('medium');
+  });
+
   it('400s without the azure-base or api-key header', async () => {
     const res = await post({ 'api-key': 'sk-op' }, { model: 'x', messages: [] });
     expect(res.status).toBe(400);
