@@ -18,6 +18,7 @@ function azureOptions(baseUrl: string, apiVersion?: string) {
   const entry = (built.config.provider as Record<string, { options: Record<string, unknown> }>)[
     built.providerId
   ];
+  if (!entry) throw new Error('expected a provider entry');
   return entry.options;
 }
 
