@@ -150,6 +150,17 @@ export function isLoopbackOrPrivateLanHost(hostname: unknown): boolean {
   );
 }
 
+/**
+ * True only for the three interchangeable loopback spellings of *this*
+ * machine. Narrower than {@link isLoopbackOrPrivateLanHost}, which also
+ * matches private LAN IPs — those address other machines and must not be
+ * treated as spelling variants of each other.
+ */
+export function isSameMachineLoopbackHost(hostname: unknown): boolean {
+  const host = String(hostname || '').toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]';
+}
+
 export function isAllowedBrowserHost(
   hostHeader: unknown,
   ports: number[],
@@ -189,6 +200,30 @@ export function isAllowedBrowserOrigin(
     return false;
   }
   if (parsedOrigin.protocol !== 'http:' && parsedOrigin.protocol !== 'https:') return false;
+
+  // Loopback-equivalence for explicitly-allowed origins. `localhost` and
+  // `127.0.0.1` (and `[::1]`) address the same machine, but the browser sends
+  // whichever the user typed. An operator who allowlists one loopback origin
+  // means the port, not the spelling — so a loopback origin on a port that
+  // any allowlisted loopback origin uses is allowed too. This removes the
+  // "works on 127.0.0.1 but 403s on localhost" footgun for the same port.
+  if (isSameMachineLoopbackHost(parsedOrigin.hostname)) {
+    for (const allowed of extraAllowedOrigins) {
+      let parsedAllowed;
+      try {
+        parsedAllowed = new URL(allowed);
+      } catch {
+        continue;
+      }
+      if (
+        isSameMachineLoopbackHost(parsedAllowed.hostname) &&
+        parsedAllowed.protocol === parsedOrigin.protocol &&
+        parsedAllowed.port === parsedOrigin.port
+      ) {
+        return true;
+      }
+    }
+  }
 
   const requestHost = parseHostHeader(hostHeader);
   if (!requestHost) return false;

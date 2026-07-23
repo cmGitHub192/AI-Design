@@ -816,3 +816,59 @@ describe('configuredAllowedInternalHosts: OD_ALLOWED_INTERNAL_HOSTS parsing (iss
     expect(warnings[0]).toMatch(/CIDR/i);
   });
 });
+
+describe('isAllowedBrowserOrigin: loopback-equivalence for allowlisted origins', () => {
+  // The daemon and web run on different ports in dev. The operator allowlists
+  // the web origin via OD_ALLOWED_ORIGINS, but the browser sends whichever
+  // loopback spelling the user typed. Both must be accepted for the same port.
+  const ports = [17456];
+  const bindHost = '127.0.0.1';
+
+  it('accepts localhost when 127.0.0.1 on the same port is allowlisted', () => {
+    expect(
+      isAllowedBrowserOrigin(
+        'http://localhost:17573',
+        'localhost:17573',
+        ports,
+        bindHost,
+        ['http://127.0.0.1:17573'],
+      ),
+    ).toBe(true);
+  });
+
+  it('accepts 127.0.0.1 when localhost on the same port is allowlisted', () => {
+    expect(
+      isAllowedBrowserOrigin(
+        'http://127.0.0.1:17573',
+        '127.0.0.1:17573',
+        ports,
+        bindHost,
+        ['http://localhost:17573'],
+      ),
+    ).toBe(true);
+  });
+
+  it('does not extend equivalence across a different port', () => {
+    expect(
+      isAllowedBrowserOrigin(
+        'http://localhost:19999',
+        'localhost:19999',
+        ports,
+        bindHost,
+        ['http://127.0.0.1:17573'],
+      ),
+    ).toBe(false);
+  });
+
+  it('does not treat a non-loopback host as loopback-equivalent', () => {
+    expect(
+      isAllowedBrowserOrigin(
+        'http://evil.example:17573',
+        'evil.example:17573',
+        ports,
+        bindHost,
+        ['http://127.0.0.1:17573'],
+      ),
+    ).toBe(false);
+  });
+});
