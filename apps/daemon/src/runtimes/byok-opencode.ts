@@ -127,6 +127,17 @@ function normalizeProviderBaseUrl(
     if (isLocalOllamaOriginPath(trimmed)) return `${trimmed}/v1`;
     if (trimmed.endsWith('/api')) return `${trimmed.slice(0, -4)}/v1`;
   }
+  if (protocol === 'azure') {
+    // @ai-sdk/azure appends `/deployments/<name>/...` to whatever baseURL it
+    // is handed; it does NOT insert the `/openai` segment the way it does
+    // when given a bare `resourceName`. A bare resource host like
+    // `https://my.openai.azure.com` therefore yields
+    // `/deployments/...` (404 "Resource not found") instead of
+    // `/openai/deployments/...`. Append `/openai` so the deployment path
+    // resolves. Leave already-versioned or already-prefixed URLs untouched.
+    const path = safeUrlPathname(trimmed);
+    if (path === '' || path === '/') return `${trimmed}/openai`;
+  }
   return trimmed;
 }
 
@@ -273,5 +284,9 @@ function apiVersionOption(
 ): Record<string, string> {
   const trimmed = apiVersion?.trim() ?? '';
   if (trimmed) return { apiVersion: trimmed };
-  return omitWhenBlank ? {} : { apiVersion: '2024-10-21' };
+  // OpenCode's Azure provider targets the Responses API (`/responses`), which
+  // does not exist before api-version 2025-03-01-preview — the `2024-10-21`
+  // that the chat/completions probe uses would 404 here. An operator who
+  // pins OD_BYOK_API_VERSION still wins over this default.
+  return omitWhenBlank ? {} : { apiVersion: '2025-04-01-preview' };
 }
