@@ -5,8 +5,6 @@ import {
   useState,
 } from 'react';
 import {
-} from '@open-design/contracts';
-import {
   LOCALE_LABEL,
   LOCALES,
   useI18n,
@@ -20,7 +18,6 @@ import {
 } from '../analytics/events';
 import type { AppConfig, AppTheme } from '../types';
 import { Icon } from './Icon';
-import { enterpriseUrl } from './enterpriseUrl';
 
 export type EntrySettingsSection =
   | 'execution'
@@ -265,30 +262,6 @@ export function EntrySettingsMenu({
             </div>
           </section>
 
-
-          <div className="entry-settings-menu__divider" aria-hidden />
-
-          <a
-            className="entry-settings-menu__item"
-            href={enterpriseUrl(locale)}
-            target="_blank"
-            rel="noreferrer noopener"
-            role="menuitem"
-            onClick={() => {
-              trackSettingsPopoverClick(analytics.track, {
-                page_name: pageName,
-                area: 'settings_popover',
-                element: 'workspace_teams',
-              });
-              setOpen(false);
-            }}
-          >
-            <span className="entry-settings-menu__item-icon" aria-hidden>
-              <Icon name="sparkles" size={14} />
-            </span>
-            <span>{t('entry.workspaceTeamsLabel')}</span>
-            <Icon name="external-link" size={12} className="entry-settings-menu__item-end" />
-          </a>
 
           <div className="entry-settings-menu__divider" aria-hidden />
 

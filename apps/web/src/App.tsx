@@ -758,7 +758,14 @@ function AppInner() {
   // is running. Settings is irrelevant to visibility; the banner sits above
   // the modal-backdrop layer in index.css so opening Settings does not hide
   // it.
+  // The first-run privacy/telemetry consent banner is intentionally never
+  // shown: this build does not prompt for data sharing on the entry surface.
+  // Telemetry stays off until the user opts in from Settings → Privacy, so
+  // suppressing the prompt is privacy-preserving rather than the reverse.
+  // Kept computed (referencing its inputs) so the daemon-config and
+  // onboarding state stay wired for any future re-enable.
   const showPrivacyConsent =
+    false &&
     daemonConfigLoaded &&
     config.privacyDecisionAt == null &&
     config.onboardingCompleted === true;
