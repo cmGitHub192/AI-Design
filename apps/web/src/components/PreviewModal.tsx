@@ -105,19 +105,10 @@ export interface PreviewShareTarget {
   url?: string | null;
 }
 
-type SocialSharePlatform =
-  | 'x'
-  | 'reddit'
-  | 'facebook'
-  | 'linkedin'
-  | 'instagram'
-  | 'xiaohongshu';
-
-// Every clickable item inside the merged Share popover — social intents,
-// copy actions and file exports. Callers receive these verbatim as
-// analytics `element` values (already snake_case).
+// Every clickable item inside the Share popover — copy actions and file
+// exports. Callers receive these verbatim as analytics `element` values
+// (already snake_case).
 export type PreviewSharePopoverItem =
-  | SocialSharePlatform
   | 'copy_link'
   | 'copy_share_text'
   | 'pdf'
@@ -125,68 +116,6 @@ export type PreviewSharePopoverItem =
   | 'html'
   | 'image'
   | 'open_in_new_tab';
-
-const SOCIAL_SHARE_PLATFORMS: Array<{
-  platform: SocialSharePlatform;
-  labelKey:
-    | 'preview.shareToX'
-    | 'preview.shareToReddit'
-    | 'preview.shareToFacebook'
-    | 'preview.shareToLinkedIn'
-    | 'preview.shareToInstagram'
-    | 'preview.shareToXiaohongshu';
-  mark: string;
-  mode: 'intent' | 'copy-open';
-  entryUrl?: string;
-}> = [
-  { platform: 'x', labelKey: 'preview.shareToX', mark: 'X', mode: 'intent' },
-  { platform: 'reddit', labelKey: 'preview.shareToReddit', mark: 'R', mode: 'intent' },
-  { platform: 'facebook', labelKey: 'preview.shareToFacebook', mark: 'f', mode: 'intent' },
-  { platform: 'linkedin', labelKey: 'preview.shareToLinkedIn', mark: 'in', mode: 'intent' },
-  {
-    platform: 'instagram',
-    labelKey: 'preview.shareToInstagram',
-    mark: 'IG',
-    mode: 'copy-open',
-    entryUrl: 'https://www.instagram.com/',
-  },
-  {
-    platform: 'xiaohongshu',
-    labelKey: 'preview.shareToXiaohongshu',
-    mark: '小',
-    mode: 'copy-open',
-    entryUrl: 'https://www.xiaohongshu.com/',
-  },
-];
-
-function buildSocialShareUrl(
-  platform: SocialSharePlatform,
-  args: { url: string; title: string; text: string },
-): string | null {
-  const params = new URLSearchParams();
-  switch (platform) {
-    case 'x':
-      params.set('url', args.url);
-      params.set('text', args.text);
-      return `https://twitter.com/intent/tweet?${params.toString()}`;
-    case 'reddit':
-      params.set('url', args.url);
-      params.set('title', args.title);
-      return `https://www.reddit.com/submit?${params.toString()}`;
-    case 'facebook':
-      params.set('u', args.url);
-      params.set('quote', args.text);
-      return `https://www.facebook.com/sharer/sharer.php?${params.toString()}`;
-    case 'linkedin':
-      params.set('url', args.url);
-      return `https://www.linkedin.com/sharing/share-offsite/?${params.toString()}`;
-    case 'instagram':
-    case 'xiaohongshu':
-      return null;
-  }
-  const exhaustive: never = platform;
-  return exhaustive;
-}
 
 interface Props {
   title: string;
@@ -465,19 +394,6 @@ export function PreviewModal({
   const previewShareUrlDisplay = previewShareUrl
     .replace(/^https?:\/\//, '')
     .replace(/\/$/, '');
-  const socialShareTargets = useMemo(
-    () => SOCIAL_SHARE_PLATFORMS.map((item) => ({
-      ...item,
-      href: item.mode === 'intent' && previewShareUrl
-        ? buildSocialShareUrl(item.platform, {
-          url: previewShareUrl,
-          title: previewShareText,
-          text: previewShareText,
-        })
-        : item.entryUrl ?? '',
-    })),
-    [previewShareText, previewShareUrl],
-  );
 
   // Always fit the design viewport to the full stage width — scaling up
   // as well as down — so the preview fills the stage edge-to-edge with
@@ -695,58 +611,6 @@ export function PreviewModal({
                       </div>
                       {previewShareUrl ? (
                         <>
-                          <section className="template-share-section">
-                            <div className="template-share-section__label">
-                              {t('preview.shareSocialGroup')}
-                            </div>
-                            <div className="template-share-platform-grid">
-                              {socialShareTargets.map((item) => (
-                                <a
-                                  key={item.platform}
-                                  className={`template-share-platform template-share-platform--${item.platform}`}
-                                  role="menuitem"
-                                  href={item.href || undefined}
-                                  target={item.href ? '_blank' : undefined}
-                                  rel={item.href ? 'noreferrer noopener' : undefined}
-                                  aria-disabled={item.href ? undefined : 'true'}
-                                  tabIndex={item.href ? undefined : -1}
-                                  onClick={(event) => {
-                                    if (!item.href) {
-                                      event.preventDefault();
-                                      return;
-                                    }
-                                    onSharePopoverItemClick?.(item.platform);
-                                    if (item.mode === 'copy-open') {
-                                      event.preventDefault();
-                                      const shareWindow = window.open('about:blank', '_blank');
-                                      const feedbackKey = `social-${item.platform}`;
-                                      void copyPreviewShare(previewShareCopy, feedbackKey).then((ok) => {
-                                        if (!ok || !item.href) {
-                                          shareWindow?.close();
-                                          return;
-                                        }
-                                        setTemplateShareOpen(false);
-                                        openShareDestination(item.href, shareWindow);
-                                      });
-                                      return;
-                                    }
-                                    setTemplateShareOpen(false);
-                                  }}
-                                >
-                                  <span className="template-share-platform__mark">
-                                    {item.mark}
-                                  </span>
-                                  <span>
-                                    {copyShareFeedback?.key === `social-${item.platform}`
-                                      ? copyShareFeedback.ok
-                                        ? t('preview.shareCopied')
-                                        : t('preview.shareCopyFailed')
-                                      : t(item.labelKey)}
-                                  </span>
-                                </a>
-                              ))}
-                            </div>
-                          </section>
                           <section className="template-share-section">
                             <div className="template-share-section__label">
                               {t('preview.shareCopyGroup')}

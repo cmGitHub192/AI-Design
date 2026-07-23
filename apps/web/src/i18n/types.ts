@@ -1007,16 +1007,7 @@ export interface Dict {
   'entry.tabVideoTemplates': string;
   'entry.openSettingsTitle': string;
   'entry.openSettingsAria': string;
-  'entry.discordLabel': string;
-  'entry.discordAria': string;
-  'entry.discordAriaWithOnline': string;
-  'entry.discordOnlineLabel': string;
-  'entry.followXLabel': string;
-  'entry.followThreadsLabel': string;
   'entry.youtubeLabel': string;
-  'entry.followInstagramLabel': string;
-  'entry.followLinkedinLabel': string;
-  'entry.followXiaohongshuLabel': string;
   'entry.resizeAria': string;
   'entry.loadingWorkspace': string;
   'entry.useEverywhereTitle': string;
@@ -2396,28 +2387,6 @@ export interface Dict {
   'avatar.modelLabel': string;
   'avatar.reasoningLabel': string;
   'avatar.customSuffix': string;
-  'socialShare.openDesignSection': string;
-  'socialShare.openDesignTitle': string;
-  'socialShare.openDesignText': string;
-  'socialShare.openDesignCopyText': string;
-  'socialShare.projectSection': string;
-  'socialShare.publishPageTitle': string;
-  'socialShare.publishPageSubtitle': string;
-  'socialShare.projectTitle': string;
-  'socialShare.projectText': string;
-  'socialShare.projectCopyText': string;
-  'socialShare.deployFirst': string;
-  'socialShare.copied': string;
-  'socialShare.platform.x': string;
-  'socialShare.platform.linkedin': string;
-  'socialShare.platform.facebook': string;
-  'socialShare.platform.reddit': string;
-  'socialShare.platform.telegram': string;
-  'socialShare.platform.whatsapp': string;
-  'socialShare.platform.weibo': string;
-  'socialShare.platform.line': string;
-  'socialShare.platform.instagram': string;
-  'socialShare.platform.xiaohongshu': string;
 
   // Inline CLI / model switcher (entry topbar)
   'inlineSwitcher.chipTitle': string;

@@ -13,10 +13,14 @@ const ACCENT_VARS = [
 // the pre-hydration theme script in `app/layout.tsx`, which cannot import
 // from here and therefore repeats the literal.
 export const DEFAULT_ACCENT_COLOR = '#7c3aed';
+// Every entry must be distinct from DEFAULT_ACCENT_COLOR, which leads the
+// list: the picker keys its swatches on the colour and labels the default one
+// specially, so a duplicate renders two radios with the same name and the
+// same React key. The stand-alone violet that used to sit here was dropped
+// when the brand accent became violet.
 export const ACCENT_SWATCHES = [
   DEFAULT_ACCENT_COLOR,
   '#2563eb',
-  '#7c3aed',
   '#059669',
   '#dc2626',
   '#d97706',

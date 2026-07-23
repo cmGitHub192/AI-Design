@@ -1,0 +1,65 @@
+/* Deployed-link panel inside the deploy modal.
+   Extracted from the former social-share stylesheet: the share-to-network
+   grid was removed, but this panel is a deployment utility (it shows the
+   published URL and hosts copy / retry) and outlived it. */
+
+.deploy-link-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+
+.deploy-link-panel.is-locked {
+  background: color-mix(in srgb, var(--bg-subtle) 72%, var(--bg-panel));
+}
+
+.deploy-link-panel.is-protected {
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--border-soft));
+  background: color-mix(in srgb, var(--accent-tint) 36%, var(--bg-panel));
+}
+
+.deploy-link-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.deploy-link-panel__label {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.deploy-link-panel__url {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.2;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deploy-link-panel__url:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.deploy-link-panel .hint {
+  margin: 0;
+}
+
+.deploy-link-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

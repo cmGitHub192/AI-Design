@@ -10,13 +10,13 @@ const OPEN_SETTINGS_LABEL = /Open settings|打开设置|開啟設定/i;
 test.describe.configure({ timeout: 30_000 });
 
 async function waitForLoadingToClear(page: Page) {
-  await expect(page.getByText('Loading Open Design…')).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.getByText('Loading Disenia…')).toHaveCount(0, { timeout: 15_000 });
 }
 
 async function gotoEntryHome(page: Page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await waitForLoadingToClear(page);
-  const privacyDialog = page.getByRole('dialog').filter({ hasText: 'Help us improve Open Design' });
+  const privacyDialog = page.getByRole('dialog').filter({ hasText: 'Help us improve Disenia' });
   if (await privacyDialog.isVisible().catch(() => false)) {
     await privacyDialog.getByRole('button', { name: /I get it|not now|got it|don't share/i }).click();
   }
@@ -107,10 +107,9 @@ test('[P2] home topbar shows the new entry chips and links', async ({ page }) =>
   await expect(star).toContainText('Star');
   await expect(star).toContainText('51.6K');
 
-  const discord = page.getByTestId('entry-discord-badge');
-  await expect(discord).toBeVisible();
-  await expect(discord).toHaveAttribute('href', 'https://discord.gg/mHAjSMV6gz');
-  await expect(discord).toContainText('Join Discord');
+  // The Discord badge that used to sit here was removed with the rest of the
+  // social surface; nothing should render in its place.
+  await expect(page.getByTestId('entry-discord-badge')).toHaveCount(0);
 
   await expect(page.getByTestId('inline-model-switcher-chip')).toBeVisible();
   await expect(page.getByTestId('entry-use-everywhere-button')).toBeVisible();
@@ -138,18 +137,13 @@ test('[P1] home topbar execution pill reflects the selected Local CLI agent and 
   await expect(popover.getByRole('radio', { name: /Codex CLI/i })).toBeVisible();
 });
 
-test('[P2] home topbar star and discord badges expose the current external-link contract', async ({ page }) => {
+test('[P2] home topbar star badge exposes the current external-link contract', async ({ page }) => {
   await gotoEntryHome(page);
 
   const star = page.getByTestId('entry-star-badge');
   await expect(star).toHaveAttribute('target', '_blank');
   await expect(star).toHaveAttribute('rel', /noreferrer/);
   await expect(star).toHaveAttribute('rel', /noopener/);
-
-  const discord = page.getByTestId('entry-discord-badge');
-  await expect(discord).toHaveAttribute('href', 'https://discord.gg/mHAjSMV6gz');
-  await expect(discord).toHaveAttribute('aria-label', /Join the Open Design Discord/i);
-  await expect(discord).toHaveAttribute('data-tooltip', /Join the Open Design Discord/i);
 });
 
 test('[P2] home topbar Use everywhere navigates to Integrations with the tab selected', async ({ page }) => {
