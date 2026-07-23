@@ -57,6 +57,10 @@ import {
   isUnsupportedMaxTokensError,
 } from './integrations/openai-chat-token-params.js';
 import { aihubmixHeaders } from './integrations/aihubmix.js';
+import {
+  AZURE_RESPONSES_API_VERSION,
+  azureDeploymentUsesResponsesApi,
+} from './azure-responses-api.js';
 import type { AgentCliEnvPrefs } from './app-config.js';
 import type { RuntimeAgentDef } from './runtimes/types.js';
 import { preparePromptFileForAgent, type PreparedPromptFile } from './runtimes/prompt-file.js';
@@ -636,6 +640,7 @@ const SAMPLE_MAX_CHARS = 120;
 // reasoning models can spend the first few dozen tokens in hidden reasoning
 // before producing a visible `ok`.
 const PROVIDER_MAX_TOKENS = 100;
+const RESPONSES_PROVIDER_MAX_TOKENS = 512;
 const SMOKE_PROMPT = 'Reply with only: ok';
 
 function formatPromptForAgentStdin(
@@ -1287,27 +1292,51 @@ function buildProviderCall(input: ProviderTestRequest): ProviderCallShape {
       const url = new URL(baseUrl);
       const basePath = url.pathname.replace(/\/+$/, '');
       const usesVersionedOpenAIPath = /\/openai\/v\d+(?:$|\/)/.test(basePath);
+      // Must match the chat proxy's routing exactly, or a green "Test
+      // connection" can be followed by a failing run. See azure-responses-api.ts.
+      const usesResponsesApi = azureDeploymentUsesResponsesApi(model);
       const apiVersion =
         typeof input.apiVersion === 'string' && input.apiVersion.trim()
           ? input.apiVersion.trim()
-          : usesVersionedOpenAIPath
-            ? ''
-            : '2024-10-21';
-      url.pathname = usesVersionedOpenAIPath
-        ? `${basePath}/chat/completions`
-        : `${basePath}/openai/deployments/${encodeURIComponent(model)}/chat/completions`;
+          : usesResponsesApi
+            ? AZURE_RESPONSES_API_VERSION
+            : usesVersionedOpenAIPath
+              ? ''
+              : '2024-10-21';
+      url.pathname = usesResponsesApi
+        ? `${basePath}/openai/responses`
+        : usesVersionedOpenAIPath
+          ? `${basePath}/chat/completions`
+          : `${basePath}/openai/deployments/${encodeURIComponent(model)}/chat/completions`;
       if (usesVersionedOpenAIPath && !apiVersion) {
         url.searchParams.delete('api-version');
       }
       if (apiVersion) {
         url.searchParams.set('api-version', apiVersion);
       }
+      const headers = {
+        'content-type': 'application/json',
+        'api-key': apiKey,
+      };
+      if (usesResponsesApi) {
+        return {
+          url: url.toString(),
+          headers,
+          body: {
+            model,
+            input: [{ role: 'user', content: SMOKE_PROMPT }],
+            // Hidden reasoning tokens count against this budget on the
+            // Responses API, so the chat surface's 100 can be spent before a
+            // visible `ok` and read as a failed smoke test.
+            max_output_tokens: RESPONSES_PROVIDER_MAX_TOKENS,
+            stream: false,
+          },
+          extractText: extractOpenAIResponsesText,
+        };
+      }
       return {
         url: url.toString(),
-        headers: {
-          'content-type': 'application/json',
-          'api-key': apiKey,
-        },
+        headers,
         body: {
           ...(usesVersionedOpenAIPath ? { model } : {}),
           ...buildLegacyMaxTokensParam(PROVIDER_MAX_TOKENS),
