@@ -128,17 +128,27 @@ function normalizeProviderBaseUrl(
     if (trimmed.endsWith('/api')) return `${trimmed.slice(0, -4)}/v1`;
   }
   if (protocol === 'azure') {
-    // @ai-sdk/azure appends `/deployments/<name>/...` to whatever baseURL it
-    // is handed; it does NOT insert the `/openai` segment the way it does
-    // when given a bare `resourceName`. A bare resource host like
-    // `https://my.openai.azure.com` therefore yields
-    // `/deployments/...` (404 "Resource not found") instead of
-    // `/openai/deployments/...`. Append `/openai` so the deployment path
-    // resolves. Leave already-versioned or already-prefixed URLs untouched.
+    // Normalise a bare Azure resource host to its `/openai` root. The final
+    // OpenAI-compatible `/openai/v1` surface is derived from this in
+    // `azureOpenAiV1BaseUrl`; keeping the `/openai` step here means an
+    // operator who pastes a fuller path is left untouched.
     const path = safeUrlPathname(trimmed);
     if (path === '' || path === '/') return `${trimmed}/openai`;
   }
   return trimmed;
+}
+
+/**
+ * The `/openai/v1` OpenAI-compatible chat surface for an Azure resource. This
+ * is what OpenCode's openai-compatible provider is pointed at; see the azure
+ * case in `buildProviderEntry` for why this surface (not the deployment-based
+ * Responses API) is used.
+ */
+function azureOpenAiV1BaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, '');
+  if (/\/openai\/v\d+$/.test(trimmed)) return trimmed;
+  const root = trimmed.replace(/\/openai$/, '');
+  return `${root}/openai/v1`;
 }
 
 function requiresApiKey(
@@ -211,15 +221,23 @@ function buildProviderEntry(
         },
       };
     case 'azure':
+      // Route Azure through the OpenAI-compatible provider against the
+      // resource's `/openai/v1` surface, NOT @ai-sdk/azure. Verified against a
+      // live OpenCode binary: @ai-sdk/azure always targets the Responses API
+      // (`/deployments/<dep>/responses`), and its `useResponsesApi:false`
+      // option is ignored — but many deployments (e.g. gpt-5.6-terra) return
+      // 404 "Resource not found" on /responses while serving /chat/completions
+      // fine. The openai-compatible provider hits `/openai/v1/chat/completions`
+      // with the deployment name in the body, and the `api-key` header is the
+      // auth Azure expects (a bearer token from the apiKey option would be
+      // rejected). The model key downstream is the Azure deployment name.
       return {
-        npm: '@ai-sdk/azure',
+        npm: '@ai-sdk/openai-compatible',
         options: {
-          ...apiKeyOption,
-          ...(baseUrl ? { baseURL: baseUrl } : {}),
-          ...(usesAzureOpenAICompatiblePath
-            ? {}
-            : { useDeploymentBasedUrls: true }),
-          ...apiVersionOption(apiVersion, usesAzureOpenAICompatiblePath),
+          baseURL: azureOpenAiV1BaseUrl(baseUrl),
+          ...(includeApiKey
+            ? { headers: { 'api-key': `{env:${BYOK_OPENCODE_API_KEY_ENV}}` } }
+            : {}),
         },
       };
     case 'google':

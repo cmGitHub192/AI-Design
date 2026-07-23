@@ -3,49 +3,53 @@ import { describe, expect, it } from 'vitest';
 import { buildOpenCodeByokProviderConfig } from '../src/runtimes/byok-opencode.js';
 
 /**
- * OpenCode drives Azure through @ai-sdk/azure, which appends
- * `/deployments/<name>/...` to the baseURL it is handed and does NOT insert
- * the `/openai` segment. A bare resource host therefore produced
- * `/deployments/...` — a 404 "Resource not found" — and the provider targets
- * the Responses API, which the old 2024-10-21 default does not serve.
+ * OpenCode drives Azure through the OpenAI-compatible provider against the
+ * resource's `/openai/v1` chat surface — NOT @ai-sdk/azure, whose default
+ * Responses API target (`/deployments/<dep>/responses`) 404s on deployments
+ * that only serve /chat/completions (verified against a live OpenCode binary
+ * and the gpt-5.6-terra deployment). Auth rides in the `api-key` header, which
+ * is what Azure expects; a bearer token from the apiKey option is rejected.
  */
-function azureOptions(baseUrl: string, apiVersion?: string) {
+function azureEntry(baseUrl: string) {
   const built = buildOpenCodeByokProviderConfig(
-    { protocol: 'azure', apiKey: 'sk-test', baseUrl, ...(apiVersion ? { apiVersion } : {}) },
+    { protocol: 'azure', apiKey: 'sk-test', baseUrl },
     'gpt-5.6-terra',
   );
   if (!built) throw new Error('expected a provider config');
-  const entry = (built.config.provider as Record<string, { options: Record<string, unknown> }>)[
+  const entry = (built.config.provider as Record<string, { npm: string; options: Record<string, any> }>)[
     built.providerId
   ];
   if (!entry) throw new Error('expected a provider entry');
-  return entry.options;
+  return entry;
 }
 
-describe('opencode azure provider url', () => {
-  it('appends /openai to a bare resource host so the deployment path resolves', () => {
-    const options = azureOptions('https://openai-inova-test.openai.azure.com');
-    expect(options.baseURL).toBe('https://openai-inova-test.openai.azure.com/openai');
+describe('opencode azure provider config', () => {
+  it('uses the openai-compatible provider, not @ai-sdk/azure', () => {
+    expect(azureEntry('https://inova.openai.azure.com').npm).toBe('@ai-sdk/openai-compatible');
+  });
+
+  it('points at the /openai/v1 chat surface for a bare resource host', () => {
+    expect(azureEntry('https://inova.openai.azure.com').options.baseURL).toBe(
+      'https://inova.openai.azure.com/openai/v1',
+    );
   });
 
   it('tolerates a trailing slash on the resource host', () => {
-    const options = azureOptions('https://openai-inova-test.openai.azure.com/');
-    expect(options.baseURL).toBe('https://openai-inova-test.openai.azure.com/openai');
+    expect(azureEntry('https://inova.openai.azure.com/').options.baseURL).toBe(
+      'https://inova.openai.azure.com/openai/v1',
+    );
   });
 
-  it('defaults to a Responses-API-capable api-version', () => {
-    const options = azureOptions('https://openai-inova-test.openai.azure.com');
-    // 2024-10-21 predates /responses; the default must be new enough to serve it.
-    expect(String(options.apiVersion)).toMatch(/^2025-/);
+  it('respects a base url already pointed at /openai/v1', () => {
+    expect(azureEntry('https://inova.openai.azure.com/openai/v1').options.baseURL).toBe(
+      'https://inova.openai.azure.com/openai/v1',
+    );
   });
 
-  it('lets an operator-pinned api-version win', () => {
-    const options = azureOptions('https://openai-inova-test.openai.azure.com', '2025-01-01-preview');
-    expect(options.apiVersion).toBe('2025-01-01-preview');
-  });
-
-  it('leaves an already /openai-prefixed base url alone', () => {
-    const options = azureOptions('https://openai-inova-test.openai.azure.com/openai');
-    expect(options.baseURL).toBe('https://openai-inova-test.openai.azure.com/openai');
+  it('sends the key in the api-key header, not as a bearer token', () => {
+    const options = azureEntry('https://inova.openai.azure.com').options;
+    expect(options.headers?.['api-key']).toBe('{env:OPEN_DESIGN_BYOK_API_KEY}');
+    // A bearer apiKey option would be rejected by Azure — it must not be set.
+    expect(options.apiKey).toBeUndefined();
   });
 });
