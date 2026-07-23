@@ -56,14 +56,14 @@ describe('byok openai rewrite proxy', () => {
   it('renames max_tokens to max_completion_tokens and forwards to the header target', async () => {
     const seen = captureUpstream();
     const res = await post(
-      { 'api-key': 'sk-op', 'x-od-azure-base': 'https://inova.openai.azure.com/openai/v1' },
+      { 'api-key': 'sk-op', 'x-od-azure-base': 'https://inova.openai.azure.com/openai', 'x-od-azure-api-version': '2024-10-21' },
       { model: 'gpt-5.6-terra', max_tokens: 16384, messages: [{ role: 'user', content: 'hi' }] },
     );
 
     expect(res.status).toBe(200);
     const call = seen.at(0);
     if (!call) throw new Error('expected one upstream call');
-    expect(call.url).toBe('https://inova.openai.azure.com/openai/v1/chat/completions');
+    expect(call.url).toBe('https://inova.openai.azure.com/openai/deployments/gpt-5.6-terra/chat/completions?api-version=2024-10-21');
     expect(call.headers['api-key']).toBe('sk-op');
     expect(call.body.max_completion_tokens).toBe(16384);
     expect(call.body).not.toHaveProperty('max_tokens');
@@ -72,7 +72,7 @@ describe('byok openai rewrite proxy', () => {
   it('leaves an existing max_completion_tokens untouched', async () => {
     const seen = captureUpstream();
     await post(
-      { 'api-key': 'sk-op', 'x-od-azure-base': 'https://inova.openai.azure.com/openai/v1' },
+      { 'api-key': 'sk-op', 'x-od-azure-base': 'https://inova.openai.azure.com/openai', 'x-od-azure-api-version': '2024-10-21' },
       { model: 'gpt-5.6-terra', max_completion_tokens: 4096, messages: [] },
     );
     expect(seen.at(0)?.body.max_completion_tokens).toBe(4096);
@@ -85,7 +85,7 @@ describe('byok openai rewrite proxy', () => {
 
   it('rejects a non-public forward target (SSRF guard)', async () => {
     const res = await post(
-      { 'api-key': 'sk-op', 'x-od-azure-base': 'http://169.254.169.254/openai/v1' },
+      { 'api-key': 'sk-op', 'x-od-azure-base': 'http://169.254.169.254/openai', 'x-od-azure-api-version': '2024-10-21' },
       { model: 'x', messages: [] },
     );
     expect(res.status === 400 || res.status === 403).toBe(true);

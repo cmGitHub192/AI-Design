@@ -16,13 +16,17 @@ import { validateUserProviderBaseUrl } from '../connectionTest.js';
  * renames the parameter and forwards the request verbatim, streaming the
  * response straight back.
  *
- * The real Azure `/openai/v1` base and the credential ride in on request
- * headers the daemon sets in the OpenCode provider config, so this route
- * holds no state and works for both operator- and client-supplied keys.
+ * The route builds the *deployment-based* chat URL
+ * (`<base>/deployments/<model>/chat/completions?api-version=…`) — the surface
+ * an Azure resource actually serves, as opposed to `/openai/v1` which 401'd on
+ * a live resource. The resource base, api-version, and credential all ride in
+ * on request headers the daemon sets in the OpenCode provider config, so this
+ * route holds no state and works for operator- and client-supplied keys alike.
  */
 
 export const BYOK_OPENAI_REWRITE_PREFIX = '/internal/byok-openai/v1';
 const AZURE_BASE_HEADER = 'x-od-azure-base';
+const AZURE_API_VERSION_HEADER = 'x-od-azure-api-version';
 
 function rewriteTokenParam(body: unknown): unknown {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
@@ -40,10 +44,15 @@ export function registerByokOpenAiRewriteRoutes(app: Express): void {
     async (req: Request, res: Response) => {
       const azureBase = req.get(AZURE_BASE_HEADER);
       const apiKey = req.get('api-key');
-      if (!azureBase || !apiKey) {
-        return res
-          .status(400)
-          .json({ error: { message: `missing ${AZURE_BASE_HEADER} or api-key header` } });
+      const apiVersion = req.get(AZURE_API_VERSION_HEADER);
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const deployment = typeof body.model === 'string' ? body.model.trim() : '';
+      if (!azureBase || !apiKey || !apiVersion || !deployment) {
+        return res.status(400).json({
+          error: {
+            message: `missing ${AZURE_BASE_HEADER} / ${AZURE_API_VERSION_HEADER} / api-key header or body.model`,
+          },
+        });
       }
 
       // SSRF guard — this route forwards to whatever base the header names.
@@ -54,7 +63,12 @@ export function registerByokOpenAiRewriteRoutes(app: Express): void {
           .json({ error: { message: validated.error } });
       }
 
-      const target = `${azureBase.replace(/\/+$/, '')}/chat/completions`;
+      // Build the deployment-based chat URL — the surface the resource serves.
+      const targetUrl = new URL(
+        `${azureBase.replace(/\/+$/, '')}/deployments/${encodeURIComponent(deployment)}/chat/completions`,
+      );
+      targetUrl.searchParams.set('api-version', apiVersion);
+      const target = targetUrl.toString();
       let upstream: Awaited<ReturnType<typeof fetch>>;
       try {
         upstream = await fetch(target, {

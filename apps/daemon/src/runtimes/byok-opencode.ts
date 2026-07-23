@@ -146,17 +146,21 @@ function normalizeProviderBaseUrl(
 }
 
 /**
- * The `/openai/v1` OpenAI-compatible chat surface for an Azure resource. This
- * is what OpenCode's openai-compatible provider is pointed at; see the azure
- * case in `buildProviderEntry` for why this surface (not the deployment-based
- * Responses API) is used.
+ * The `<resource>/openai` root for an Azure resource — the base the daemon's
+ * rewrite proxy appends `/deployments/<name>/chat/completions?api-version=…`
+ * to. That deployment-based surface is the one a resource actually serves
+ * (verified by the connection test); the `/openai/v1` surface returned 401 on
+ * a live resource, so it is not used.
  */
-function azureOpenAiV1BaseUrl(baseUrl: string): string {
+function azureOpenAiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.trim().replace(/\/+$/, '');
-  if (/\/openai\/v\d+$/.test(trimmed)) return trimmed;
-  const root = trimmed.replace(/\/openai$/, '');
-  return `${root}/openai/v1`;
+  // Strip a trailing /v1 or /openai/vN back to the /openai root.
+  const withoutVersion = trimmed.replace(/\/v\d+$/, '');
+  if (/\/openai$/.test(withoutVersion)) return withoutVersion;
+  return `${withoutVersion}/openai`;
 }
+
+const DEFAULT_AZURE_CHAT_API_VERSION = '2024-10-21';
 
 function requiresApiKey(
   protocol: ByokChatProviderConfig['protocol'],
@@ -242,25 +246,34 @@ function buildProviderEntry(
       // auth Azure expects (a bearer token from the apiKey option would be
       // rejected). The model key downstream is the Azure deployment name.
       {
-        const azureV1 = azureOpenAiV1BaseUrl(baseUrl);
+        const azureBase = azureOpenAiBaseUrl(baseUrl);
+        const chatApiVersion = apiVersion?.trim() || DEFAULT_AZURE_CHAT_API_VERSION;
         const apiKeyHeader = includeApiKey
           ? { 'api-key': `{env:${BYOK_OPENCODE_API_KEY_ENV}}` }
           : {};
-        // When the daemon origin is known, route through its rewrite proxy so
-        // `max_tokens` becomes `max_completion_tokens` for gpt-5-class
-        // deployments (see routes/byok-openai-rewrite.ts). The real Azure base
-        // travels as a header the proxy forwards to. Without an origin (config
-        // validity checks), point straight at Azure.
-        const throughProxy = Boolean(daemonOrigin);
+        // Route through the daemon's rewrite proxy, which builds the
+        // deployment-based chat/completions URL from the request's model,
+        // renames max_tokens -> max_completion_tokens, and forwards with the
+        // api-key (see routes/byok-openai-rewrite.ts). The resource base and
+        // api-version ride in as headers. Without a daemon origin (config
+        // validity checks) there is no proxy to route through, so this points
+        // nowhere runnable — those call sites only assert the config is
+        // non-null. A real run always supplies the origin.
+        const proxyBaseUrl = daemonOrigin
+          ? `${daemonOrigin}${BYOK_OPENAI_REWRITE_PREFIX}`
+          : `${azureBase}/v1`;
         return {
           npm: '@ai-sdk/openai-compatible',
           options: {
-            baseURL: throughProxy
-              ? `${daemonOrigin}${BYOK_OPENAI_REWRITE_PREFIX}`
-              : azureV1,
+            baseURL: proxyBaseUrl,
             headers: {
               ...apiKeyHeader,
-              ...(throughProxy ? { 'x-od-azure-base': azureV1 } : {}),
+              ...(daemonOrigin
+                ? {
+                    'x-od-azure-base': azureBase,
+                    'x-od-azure-api-version': chatApiVersion,
+                  }
+                : {}),
             },
           },
         };
