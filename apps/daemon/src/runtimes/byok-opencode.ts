@@ -44,6 +44,12 @@ export function opencodeByokModelId(model: string | null | undefined): string | 
 export function buildOpenCodeByokProviderConfig(
   rawProvider: Partial<ByokChatProviderConfig> | null | undefined,
   model: string | null | undefined,
+  // Loopback origin of the daemon's own HTTP server, e.g.
+  // `http://127.0.0.1:17456`. When present, Azure requests are routed through
+  // the daemon's max_tokens→max_completion_tokens rewrite proxy instead of
+  // hitting Azure directly. Absent for validity-check call sites, which only
+  // need a non-null config, not a runnable one.
+  daemonOrigin?: string | null,
 ): OpenCodeByokProviderConfig | null {
   // A hosted deployment owns the credential; the client may send a provider
   // with no apiKey (or none at all). See byok-server-defaults.ts.
@@ -80,6 +86,7 @@ export function buildOpenCodeByokProviderConfig(
     baseUrl,
     provider.apiVersion,
     needsApiKey,
+    daemonOrigin ?? null,
   );
   const config = {
     provider: {
@@ -200,11 +207,14 @@ function isRealOpenAIHost(baseUrl: string): boolean {
   }
 }
 
+const BYOK_OPENAI_REWRITE_PREFIX = '/internal/byok-openai/v1';
+
 function buildProviderEntry(
   protocol: ByokChatProviderConfig['protocol'],
   baseUrl: string,
   apiVersion: string | undefined,
   includeApiKey: boolean,
+  daemonOrigin: string | null,
 ): { npm: ProviderPackage; options: Record<string, unknown> } {
   const apiKeyOption = includeApiKey
     ? { apiKey: `{env:${BYOK_OPENCODE_API_KEY_ENV}}` }
@@ -231,15 +241,30 @@ function buildProviderEntry(
       // with the deployment name in the body, and the `api-key` header is the
       // auth Azure expects (a bearer token from the apiKey option would be
       // rejected). The model key downstream is the Azure deployment name.
-      return {
-        npm: '@ai-sdk/openai-compatible',
-        options: {
-          baseURL: azureOpenAiV1BaseUrl(baseUrl),
-          ...(includeApiKey
-            ? { headers: { 'api-key': `{env:${BYOK_OPENCODE_API_KEY_ENV}}` } }
-            : {}),
-        },
-      };
+      {
+        const azureV1 = azureOpenAiV1BaseUrl(baseUrl);
+        const apiKeyHeader = includeApiKey
+          ? { 'api-key': `{env:${BYOK_OPENCODE_API_KEY_ENV}}` }
+          : {};
+        // When the daemon origin is known, route through its rewrite proxy so
+        // `max_tokens` becomes `max_completion_tokens` for gpt-5-class
+        // deployments (see routes/byok-openai-rewrite.ts). The real Azure base
+        // travels as a header the proxy forwards to. Without an origin (config
+        // validity checks), point straight at Azure.
+        const throughProxy = Boolean(daemonOrigin);
+        return {
+          npm: '@ai-sdk/openai-compatible',
+          options: {
+            baseURL: throughProxy
+              ? `${daemonOrigin}${BYOK_OPENAI_REWRITE_PREFIX}`
+              : azureV1,
+            headers: {
+              ...apiKeyHeader,
+              ...(throughProxy ? { 'x-od-azure-base': azureV1 } : {}),
+            },
+          },
+        };
+      }
     case 'google':
       return {
         npm: '@ai-sdk/google',

@@ -614,6 +614,7 @@ import { registerHandoffRoutes } from './routes/handoff.js';
 import { EmptyTranscriptError, synthesizeHandoffPrompt } from './design/index.js';
 import { TranscriptExportLockedError } from './transcript-export.js';
 import { registerChatRoutes } from './routes/chat.js';
+import { registerByokOpenAiRewriteRoutes } from './routes/byok-openai-rewrite.js';
 import { registerRunRoutes } from './routes/runs.js';
 import { registerTerminalRoutes } from './routes/terminal.js';
 import { createTerminalService } from './terminals.js';
@@ -4270,6 +4271,7 @@ export async function startServer({
       ? buildOpenCodeByokProviderConfig(
           byokProvider,
           typeof model === 'string' ? model : null,
+          resolvedPort ? `http://127.0.0.1:${resolvedPort}` : null,
         )
       : null;
     if (def.id === 'byok-opencode' && !byokOpenCodeProvider) {
@@ -8683,6 +8685,8 @@ export async function startServer({
     lifecycle: { isDaemonShuttingDown: () => daemonShuttingDown },
     telemetry: { reportFinalizedMessage, reportFeedback },
   });
+
+  registerByokOpenAiRewriteRoutes(app);
 
   registerStaticSpaFallback(app, STATIC_DIR);
 
