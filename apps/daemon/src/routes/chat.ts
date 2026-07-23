@@ -37,6 +37,10 @@ import { googleStreamGenerateContentUrl } from '../integrations/google-models.js
 import { createRoleMarkerGuard } from '../role-marker-guard.js';
 import { authorizeReasoningEgress, sendReasoningEgressDenial } from '../reasoning-egress.js';
 import { applyServerProxyDefaults } from '../byok-server-defaults.js';
+import {
+  AZURE_RESPONSES_API_VERSION,
+  azureDeploymentUsesResponsesApi,
+} from '../azure-responses-api.js';
 import type { ByokChatProtocol } from '@open-design/contracts';
 
 // Allowlist for the `/feedback` route. Mirrors the
@@ -574,6 +578,16 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
     const first = choices[0];
     if (typeof first?.delta?.content === 'string') return first.delta.content;
     if (typeof first?.text === 'string') return first.text;
+    return '';
+  };
+
+  // Responses-API failures arrive as typed events, not as a top-level `error`
+  // key, so `extractStreamErrorMessage` cannot see them.
+  const extractAzureResponsesStreamError = (data: any) => {
+    if (data?.type === 'error') return data.message || 'stream error';
+    if (data?.type === 'response.failed') {
+      return data.response?.error?.message || 'response failed';
+    }
     return '';
   };
 
@@ -1138,15 +1152,21 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
     const url = new URL(baseUrl);
     const basePath = url.pathname.replace(/\/+$/, '');
     const usesVersionedOpenAIPath = /\/openai\/v\d+(?:$|\/)/.test(basePath);
+    // See azure-responses-api.ts: the gpt-5.6 family only serves /openai/responses.
+    const usesResponsesApi = azureDeploymentUsesResponsesApi(model);
     const version =
       typeof apiVersion === 'string' && apiVersion.trim()
         ? apiVersion.trim()
-        : usesVersionedOpenAIPath
-          ? ''
-          : '2024-10-21';
-    url.pathname = usesVersionedOpenAIPath
-      ? `${basePath}/chat/completions`
-      : `${basePath}/openai/deployments/${encodeURIComponent(model)}/chat/completions`;
+        : usesResponsesApi
+          ? AZURE_RESPONSES_API_VERSION
+          : usesVersionedOpenAIPath
+            ? ''
+            : '2024-10-21';
+    url.pathname = usesResponsesApi
+      ? `${basePath}/openai/responses`
+      : usesVersionedOpenAIPath
+        ? `${basePath}/chat/completions`
+        : `${basePath}/openai/deployments/${encodeURIComponent(model)}/chat/completions`;
     if (usesVersionedOpenAIPath && !version) {
       url.searchParams.delete('api-version');
     }
@@ -1176,6 +1196,17 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
       ...buildMaxCompletionTokensParam(effectiveMaxTokens),
       stream: true,
     };
+    // The Responses API takes the deployment in `model`, the turns in `input`,
+    // and the system prompt in `instructions` rather than as a leading message.
+    const responsesPayload = {
+      model,
+      ...(typeof systemPrompt === 'string' && systemPrompt
+        ? { instructions: systemPrompt }
+        : {}),
+      input: Array.isArray(messages) ? messages : [],
+      max_output_tokens: effectiveMaxTokens,
+      stream: true,
+    };
 
     const sse = createSseResponse(res);
     let proxyDispatcher: ReturnType<typeof proxyDispatcherRequestInit> | null = null;
@@ -1195,12 +1226,13 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
       };
       let response = await fetch(url, {
         ...requestInit,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(usesResponsesApi ? responsesPayload : payload),
       });
 
       if (!response.ok) {
         let errorText = await response.text();
         if (
+          !usesResponsesApi &&
           response.status === 400 &&
           isUnsupportedMaxTokensError(errorText)
         ) {
@@ -1239,13 +1271,29 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
           return true;
         }
         if (!data) return false;
-        const streamError = extractStreamErrorMessage(data);
+        const streamError =
+          extractStreamErrorMessage(data) ||
+          (usesResponsesApi ? extractAzureResponsesStreamError(data) : '');
         if (streamError) {
           sendProxyError(sse, `Azure error: ${streamError}`, { details: data });
           ended = true;
           return true;
         }
-        const delta = extractOpenAIText(data);
+        // The Responses API has no `[DONE]` sentinel; the terminal event is
+        // what closes the stream.
+        if (
+          usesResponsesApi &&
+          (data.type === 'response.completed' || data.type === 'response.incomplete')
+        ) {
+          sse.send('end', {});
+          ended = true;
+          return true;
+        }
+        const delta = usesResponsesApi
+          ? data.type === 'response.output_text.delta' && typeof data.delta === 'string'
+            ? data.delta
+            : ''
+          : extractOpenAIText(data);
         if (delta) { guard.sendDelta(delta); 
           if (guard.contaminated) { 
             sse.send('end', {}); 

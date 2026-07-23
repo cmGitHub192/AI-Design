@@ -570,6 +570,78 @@ describe('API proxy routes', () => {
     expect(upstreamInit?.redirect).toBe('error');
   });
 
+  // Regression: gpt-5.6 deployments only serve /openai/responses. Sending them
+  // to the deployment-scoped chat surface makes the Azure gateway answer 401
+  // "Access denied due to invalid subscription key or wrong API endpoint",
+  // which reads as a bad credential even though the key is fine.
+  it('routes gpt-5.6 Azure deployments to the Responses API', async () => {
+    const fetchMock = vi.fn((input: FetchInput, init?: FetchInit) => {
+      const url = String(input);
+      if (url.startsWith(baseUrl)) return realFetch(input, init);
+      return Promise.resolve(sseResponse([
+        'data: {"type":"response.output_text.delta","delta":"hi"}',
+        '',
+        'data: {"type":"response.completed","response":{"status":"completed"}}',
+        '',
+      ].join('\n')));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await realFetch(`${baseUrl}/api/proxy/azure/stream`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        baseUrl: 'https://openai-inova-test.openai.azure.com',
+        apiKey: 'azure-key',
+        model: 'gpt-5.6-terra',
+        systemPrompt: 'be brief',
+        maxTokens: 4096,
+        messages: [{ role: 'user', content: 'hello' }],
+      }),
+    });
+
+    const text = await res.text();
+    expect(text).toContain('event: delta\ndata: {"delta":"hi"}');
+    expect(text).toContain('event: end');
+
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0]!;
+    expect(String(upstreamUrl)).toBe(
+      'https://openai-inova-test.openai.azure.com/openai/responses?api-version=2025-04-01-preview',
+    );
+    expect(upstreamInit?.headers).toMatchObject({ 'api-key': 'azure-key' });
+    expect(JSON.parse(String(upstreamInit?.body))).toEqual({
+      model: 'gpt-5.6-terra',
+      instructions: 'be brief',
+      input: [{ role: 'user', content: 'hello' }],
+      max_output_tokens: 4096,
+      stream: true,
+    });
+  });
+
+  it('surfaces a Responses-API response.failed event as a proxy error', async () => {
+    const fetchMock = vi.fn((input: FetchInput, init?: FetchInit) => {
+      const url = String(input);
+      if (url.startsWith(baseUrl)) return realFetch(input, init);
+      return Promise.resolve(sseResponse(
+        'data: {"type":"response.failed","response":{"error":{"message":"content filtered"}}}\n\n',
+      ));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await realFetch(`${baseUrl}/api/proxy/azure/stream`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        baseUrl: 'https://openai-inova-test.openai.azure.com',
+        apiKey: 'azure-key',
+        model: 'gpt-5.6-terra',
+        messages: [{ role: 'user', content: 'hello' }],
+      }),
+    });
+
+    await expect(res.text()).resolves.toContain('Azure error: content filtered');
+  });
+
   it('retries Azure OpenAI-compatible v1 alias requests with max_completion_tokens when max_tokens is rejected', async () => {
     const fetchMock = vi.fn((input: FetchInput, init?: FetchInit) => {
       const url = String(input);
