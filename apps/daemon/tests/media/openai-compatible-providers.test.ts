@@ -414,6 +414,54 @@ process.stdin.on('end', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('routes the Azure AI Foundry v1 image surface to api-version=preview with the model in the body', async () => {
+    // The `openai` media slot pointed at an AI Foundry v1 endpoint
+    // (…/openai/v1/… on a services.ai.azure.com resource). That surface only
+    // accepts the rolling `preview` api-version (a dated one 400s) and carries
+    // the model in the body since there is no deployment in the path.
+    await writeConfig({
+      providers: {
+        openai: {
+          apiKey: 'azure-key',
+          baseUrl:
+            'https://openai-inova-test.services.ai.azure.com/openai/v1/images/generations',
+        },
+      },
+    });
+
+    const fetchMock = vi.fn(async (input: unknown, init?: RequestInit) => {
+      expect(String(input)).toBe(
+        'https://openai-inova-test.services.ai.azure.com/openai/v1/images/generations?api-version=preview',
+      );
+      expect(init?.method).toBe('POST');
+      // Azure's canonical auth header rides alongside the bearer token.
+      expect(init?.headers).toMatchObject({ 'api-key': 'azure-key' });
+      const body = JSON.parse(String(init?.body));
+      // v1 surface → model MUST be in the body (no deployment in the path).
+      expect(body.model).toBe('gpt-image-2');
+      expect(body.prompt).toBe('a cat in a sunlit living room');
+      return new Response(JSON.stringify({ data: [{ b64_json: PNG_BASE64 }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await generateMedia({
+      projectRoot,
+      projectsRoot,
+      projectId: 'project-1',
+      surface: 'image',
+      model: 'gpt-image-2',
+      prompt: 'a cat in a sunlit living room',
+      output: 'cat.png',
+    });
+
+    expect(result.providerId).toBe('openai');
+    expect(result.providerNote).toContain('azure-openai/gpt-image-2');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('rewrites custom-image text-only requests back to /v1/images/generations when configured with an edits URL', async () => {
     await writeConfig({
       providers: {

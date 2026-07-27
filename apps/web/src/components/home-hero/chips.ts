@@ -307,42 +307,6 @@ export const HOME_HERO_CHIPS: ReadonlyArray<HomeHeroChip> = [
     },
   },
   {
-    id: 'video',
-    label: 'Video',
-    icon: 'play',
-    group: 'create',
-    description: 'Clips, reels & promos',
-    action: {
-      kind: 'apply-scenario',
-      pluginId: 'od-media-generation',
-      projectKind: 'video',
-      inputs: {
-        mediaKind: 'video',
-        subject: 'a short product reveal',
-        style: 'cinematic, high-quality, on-brand',
-        aspect: '16:9',
-      },
-    },
-  },
-  {
-    id: 'audio',
-    label: 'Audio',
-    icon: 'mic',
-    group: 'create',
-    description: 'Voiceovers, music & SFX',
-    action: {
-      kind: 'apply-scenario',
-      pluginId: 'od-media-generation',
-      projectKind: 'audio',
-      inputs: {
-        mediaKind: 'audio',
-        subject: 'a concise audio identity for a product',
-        style: 'clear, polished, modern',
-        aspect: '16:9',
-      },
-    },
-  },
-  {
     id: 'create-plugin',
     label: 'Create plugin',
     icon: 'edit',
@@ -399,17 +363,12 @@ export const CREATE_RAIL_ORDER = [
   'webgl',
   'live-artifact',
   'image',
-  'video',
-  'audio',
 ] as const;
 
 // Chip ids the onboarding "build a design system" teaser intentionally omits.
-// Video and Audio are the trailing pure-media outputs in CREATE_RAIL_ORDER and
-// the least central to the design-system story, so they are the first to drop
-// when keeping the teaser chips to a single tidy row. Website clone starts
-// from someone else's site rather than the user's design system, so it stays
-// off the design-system teaser too.
-const ONBOARDING_ARTIFACT_OMIT = new Set<string>(['web-clone', 'video', 'audio']);
+// Website clone starts from someone else's site rather than the user's design
+// system, so it stays off the design-system teaser.
+const ONBOARDING_ARTIFACT_OMIT = new Set<string>(['web-clone']);
 
 // The artifact chips shown on the onboarding "build a design system" step — a
 // curated single-row subset of the create rail. Derived from CREATE_RAIL_ORDER

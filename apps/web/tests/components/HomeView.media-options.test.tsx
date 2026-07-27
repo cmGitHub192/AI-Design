@@ -93,13 +93,13 @@ describe('HomeView media composer options', () => {
     expect(document.body.contains(popover)).toBe(true);
   });
 
-  it('surfaces the persistent design-system picker and no footer pills for Image/Video or HyperFrames/Audio', async () => {
+  it('surfaces the persistent design-system picker and no footer pills for Image or HyperFrames', async () => {
     stubFetch();
     renderHome();
 
     // The design-system picker is now the persistent row below the composer, so
-    // it is present for every kind and no longer a footer pill. Image/Video add
-    // no inline footer pills either; ratio / duration / model / resolution are
+    // it is present for every kind and no longer a footer pill. Image adds
+    // no inline footer pills either; ratio / model / resolution are
     // asked for during the run (mirroring prototype/deck).
     expect(screen.getByTestId('home-hero-design-system-trigger')).toBeTruthy();
 
@@ -112,29 +112,13 @@ describe('HomeView media composer options', () => {
     expect(screen.queryByTestId('home-hero-footer-option-resolution')).toBeNull();
     expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
 
-    await clickHomeRailChip('video');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(promptIsEmpty()).toBe(true);
-    expect(screen.queryByTestId('home-hero-footer-option-designSystem')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-model')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-ratio')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-resolution')).toBeNull();
-
-    // HyperFrames / Audio keep no pre-flight pills at all.
+    // HyperFrames keeps no pre-flight pills at all.
     await clickHomeRailChip('hyperframes');
     await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
     expect(promptIsEmpty()).toBe(true);
     expect(screen.queryByTestId('home-hero-footer-option-ratio')).toBeNull();
     expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
     expect(screen.queryByTestId('home-hero-footer-option-model')).toBeNull();
-
-    await clickHomeRailChip('audio');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(promptIsEmpty()).toBe(true);
-    expect(screen.queryByTestId('home-hero-footer-option-audioType')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-model')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
     // Inline `{{slot}}` prompt widgets are gone too; nothing is injected into
     // the prompt body.
     expect(screen.queryByTestId('home-hero-prompt-slot-text')).toBeNull();
@@ -194,24 +178,9 @@ describe('HomeView media composer options', () => {
     expect(screen.queryByRole('dialog', { name: /replace current prompt/i })).toBeNull();
 
     await setHomePrompt('Make this prompt personally tuned.');
-    await clickHomeRailChip('video');
+    await clickHomeRailChip('hyperframes');
     await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
     expect(screen.queryByRole('dialog', { name: /replace current prompt/i })).toBeNull();
-  });
-
-  it('keeps the prompt empty for Audio and never injects inline slot widgets', async () => {
-    stubFetch();
-    renderHome();
-
-    // Audio type / model / duration / voice are no longer footer pills — the
-    // agent asks for them during the run. The composer just stays empty.
-    await clickHomeRailChip('audio');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(promptIsEmpty()).toBe(true);
-    expect(screen.queryByTestId('home-hero-footer-option-audioType')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
-    expect(screen.queryByTestId('home-hero-prompt-slot-prompt')).toBeNull();
-    expect(screen.queryByTestId('home-hero-prompt-slot-text')).toBeNull();
   });
 
   it('hides the full selector grid for media surfaces', async () => {
@@ -224,41 +193,20 @@ describe('HomeView media composer options', () => {
     expect(screen.queryByRole('combobox', { name: 'Model' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Ratio' })).toBeNull();
 
-    await clickHomeRailChip('video');
+    await clickHomeRailChip('hyperframes');
     await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
     expect(screen.queryByRole('combobox', { name: 'Duration' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Template' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Model' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Ratio' })).toBeNull();
-
-    await clickHomeRailChip('audio');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    // No audio pills/combobox at all now — those questions moved to the agent.
-    expect(screen.queryByTestId('home-hero-footer-option-audioType')).toBeNull();
-    expect(screen.queryByRole('combobox', { name: 'Audio type' })).toBeNull();
-    // The inline plugin inputs form was removed from the Home composer, so the
-    // non-footer "Text" input no longer renders as a free-standing control.
-    expect(screen.queryByRole('textbox', { name: 'Text' })).toBeNull();
     expect(promptIsEmpty()).toBe(true);
   });
 
-  it('splits Video and HyperFrames templates into separate submitted metadata', async () => {
+  it('submits the selected HyperFrames template metadata', async () => {
     stubFetch();
     const onSubmit = vi.fn();
     renderHome({ onSubmit });
 
-    await clickHomeRailChip('video');
-    await setHomePrompt('Make a product reveal video.');
-    await submitHome();
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-        projectMetadata: expect.objectContaining({
-          promptTemplate: expect.objectContaining({ id: 'video-reveal' }),
-        }),
-      }));
-    });
-
-    onSubmit.mockClear();
     await clickHomeRailChip('hyperframes');
     await setHomePrompt('Make a HyperFrames motion video.');
     await submitHome();
@@ -313,7 +261,7 @@ describe('HomeView media composer options', () => {
       ],
     });
 
-    await clickHomeRailChip('video');
+    await clickHomeRailChip('image');
     await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
     await chooseOption('designSystem', 'brand-alpha', 'Brand Alpha');
     setHomePrompt('Create a launch teaser.');
@@ -323,7 +271,7 @@ describe('HomeView media composer options', () => {
       expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
         prompt: 'Create a launch teaser.',
         designSystemId: 'brand-alpha',
-        // ratio / duration are no longer seeded into metadata — the agent asks.
+        // ratio / resolution are no longer seeded into metadata — the agent asks.
         projectMetadata: expect.not.objectContaining({
           videoAspect: expect.anything(),
           videoLength: expect.anything(),
@@ -331,7 +279,7 @@ describe('HomeView media composer options', () => {
       }));
     });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-      projectMetadata: expect.objectContaining({ kind: 'video' }),
+      projectMetadata: expect.objectContaining({ kind: 'image' }),
     }));
   });
 
@@ -346,7 +294,7 @@ describe('HomeView media composer options', () => {
     const onSubmit = vi.fn();
     renderHome({ onSubmit });
 
-    await clickHomeRailChip('video');
+    await clickHomeRailChip('image');
     await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
     await setHomePrompt('Create a launch teaser.');
     await submitHome();
@@ -372,7 +320,7 @@ describe('HomeView media composer options', () => {
     const onSubmit = vi.fn();
     renderHome({ onSubmit });
 
-    await clickHomeRailChip('video');
+    await clickHomeRailChip('image');
     await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
     await setHomePrompt('Create a launch teaser.');
     await submitHome();

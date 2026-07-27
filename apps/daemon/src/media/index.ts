@@ -864,6 +864,18 @@ function defaultAspectFor(surface: MediaSurface): string | undefined {
 // ---------------------------------------------------------------------------
 
 const AZURE_DEFAULT_API_VERSION = '2024-02-01';
+// The gpt-image-* family (gpt-image-1/1.5/2) is only served by the Azure
+// image endpoint from this api-version onward; the dall-e default above
+// (2024-02-01) predates it and answers 400 "invalid api-version" for a
+// gpt-image deployment. Per Azure's DALL-E / image-generation how-to the
+// documented floor is "2025-04-01-preview or later". A user who encoded a
+// concrete `?api-version=` into the base URL still wins over this default.
+const AZURE_GPT_IMAGE_API_VERSION = '2025-04-01-preview';
+// The Azure AI Foundry "v1" surface (`…/openai/v1/…`, typically on a
+// `*.services.ai.azure.com` resource) is model-in-body and only accepts the
+// rolling `preview` api-version — a dated one answers 400 "API version not
+// supported". This differs from the classic deployment surface above.
+const AZURE_V1_API_VERSION = 'preview';
 const OPENAI_IMAGE_HEADERS_TIMEOUT_MS = 10 * 60 * 1000;
 const OPENAI_IMAGE_BODY_TIMEOUT_MS = 10 * 60 * 1000;
 const openAIImageDispatcher = new UndiciAgent({
@@ -892,18 +904,28 @@ async function renderOpenAIImage(ctx: MediaContext, credentials: ProviderConfig)
   }
   const rawBase = credentials.baseUrl || 'https://api.openai.com/v1';
   const azure = detectAzureEndpoint(rawBase);
-  const url = buildOpenAIImageUrl(rawBase, azure);
+  // The AI Foundry v1 surface (`…/openai/v1/…`) needs the rolling `preview`
+  // api-version; the classic deployment surface needs a dated one, and
+  // gpt-image predates the dall-e default so it gets its own floor.
+  const azureV1 = azure && detectAzureV1Path(rawBase);
+  const azureDefaultApiVersion = azureV1
+    ? AZURE_V1_API_VERSION
+    : ctx.model.startsWith('gpt-image-')
+      ? AZURE_GPT_IMAGE_API_VERSION
+      : AZURE_DEFAULT_API_VERSION;
+  const url = buildOpenAIImageUrl(rawBase, azure, azureDefaultApiVersion);
 
   const body: Record<string, unknown> = {
     prompt: ctx.prompt || 'A high-quality reference image.',
     n: 1,
     size: openaiSizeFor(ctx.model, ctx.aspect),
   };
-  // For non-Azure calls, include `model` in the body. Azure infers it
-  // from the deployment in the path so omitting it keeps payloads
-  // compatible across both flavors. The wire-name (post-alias) goes
-  // on the body so the user's alias from issue #1277 reaches the API.
-  if (!azure) {
+  // The classic Azure deployment surface infers the model from the path, so we
+  // omit it there. The public OpenAI API and the Azure v1 surface both carry
+  // the model in the body (v1 has no deployment segment). The wire-name
+  // (post-alias) goes on the body so the user's alias from issue #1277 reaches
+  // the API.
+  if (!azure || azureV1) {
     body.model = ctx.wireModel;
   }
   // Capability branches key off the CATALOG id (not the alias) so a
@@ -1359,6 +1381,22 @@ function detectAzureEndpoint(baseUrl: string): boolean {
 }
 
 /**
+ * Does this Azure base URL use the AI Foundry "v1" surface
+ * (`…/openai/v1/…`) rather than the classic `…/openai/deployments/<name>/…`
+ * surface? The v1 surface carries the model in the request body and only
+ * accepts `api-version=preview`; the classic surface names the deployment in
+ * the path and takes a dated api-version.
+ */
+function detectAzureV1Path(baseUrl: string): boolean {
+  if (typeof baseUrl !== 'string' || !baseUrl) return false;
+  try {
+    return /\/openai\/v\d+(?:\/|$)/i.test(new URL(baseUrl).pathname);
+  } catch {
+    return /\/openai\/v\d+(?:\/|$)/i.test(baseUrl);
+  }
+}
+
+/**
  * Build the full /images/generations URL, preserving any user-supplied
  * query string (e.g. an explicit `?api-version=2024-12-01`) and
  * appending the default api-version for Azure when the user didn't
@@ -1395,7 +1433,11 @@ function buildOpenAICompatibleGenerationUrl(baseUrl: string, endpoint: 'images' 
   return parsed.toString();
 }
 
-function buildOpenAIImageUrl(baseUrl: string, isAzure: boolean): string {
+function buildOpenAIImageUrl(
+  baseUrl: string,
+  isAzure: boolean,
+  defaultApiVersion: string = AZURE_DEFAULT_API_VERSION,
+): string {
   let parsed;
   try {
     parsed = new URL(buildOpenAICompatibleGenerationUrl(baseUrl, 'images'));
@@ -1405,7 +1447,7 @@ function buildOpenAIImageUrl(baseUrl: string, isAzure: boolean): string {
     return buildOpenAICompatibleGenerationUrl(baseUrl, 'images');
   }
   if (isAzure && !parsed.searchParams.has('api-version')) {
-    parsed.searchParams.set('api-version', AZURE_DEFAULT_API_VERSION);
+    parsed.searchParams.set('api-version', defaultApiVersion);
   }
   return parsed.toString();
 }

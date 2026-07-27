@@ -146,11 +146,11 @@ describe('HomeHero intent rail', () => {
   });
 
   it('moves the active creation chip into the composer and hides the tab row', () => {
-    renderHero({ activeChipId: 'video' });
+    renderHero({ activeChipId: 'image' });
     expect(screen.queryByTestId('home-hero-type-tabs')).toBeNull();
-    expect(screen.queryByTestId('home-hero-rail-video')).toBeNull();
+    expect(screen.queryByTestId('home-hero-rail-image')).toBeNull();
     const node = screen.getByTestId('home-hero-template-trigger');
-    expect(node.textContent).toContain('Video');
+    expect(node.textContent).toContain('Image');
   });
 
   it('keeps the blank project entry visible after a template is selected', () => {
@@ -528,14 +528,18 @@ describe('HomeHero intent rail', () => {
     expect(findChip('create-brand-kit')?.icon).toBe('swatchbook');
   });
 
-  it('media chips route to od-media-generation with the matching project kind', () => {
+  it('the image chip routes to od-media-generation with the image project kind', () => {
     expect(findChip('image')?.action).toMatchObject({
       kind: 'apply-scenario',
       pluginId: 'od-media-generation',
       projectKind: 'image',
     });
-    expect(findChip('video')?.action).toMatchObject({ pluginId: 'od-media-generation', projectKind: 'video' });
-    expect(findChip('audio')?.action).toMatchObject({ pluginId: 'od-media-generation', projectKind: 'audio' });
+  });
+
+  it('the Video and Audio chips were removed from the Home rail', () => {
+    expect(findChip('video')).toBeUndefined();
+    expect(findChip('audio')).toBeUndefined();
+    expect(HOME_HERO_CHIPS.some((chip) => chip.id === 'video' || chip.id === 'audio')).toBe(false);
   });
 
   it('prototype and slide-deck chips route to their specialised bundled scenario plugin', () => {

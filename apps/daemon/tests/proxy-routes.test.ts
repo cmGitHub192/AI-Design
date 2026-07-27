@@ -618,6 +618,56 @@ describe('API proxy routes', () => {
     });
   });
 
+  it('advertises the generate_image tool on the Responses API when a projectId is present', async () => {
+    const fetchMock = vi.fn((input: FetchInput, init?: FetchInit) => {
+      const url = String(input);
+      if (url.startsWith(baseUrl)) return realFetch(input, init);
+      // No function_call in the output → the tool loop ends after one turn
+      // without ever invoking the media dispatcher, so this stays a pure
+      // wiring assertion (does the request offer the tool?).
+      return Promise.resolve(sseResponse([
+        'data: {"type":"response.output_text.delta","delta":"ok"}',
+        '',
+        'data: {"type":"response.completed","response":{"status":"completed","output":[]}}',
+        '',
+      ].join('\n')));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await realFetch(`${baseUrl}/api/proxy/azure/stream`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        baseUrl: 'https://openai-inova-test.openai.azure.com',
+        apiKey: 'azure-key',
+        model: 'gpt-5.6-terra',
+        systemPrompt: 'be brief',
+        maxTokens: 4096,
+        projectId: 'demo-project',
+        byokImageModel: 'gpt-image-2',
+        messages: [{ role: 'user', content: 'draw a cat' }],
+      }),
+    });
+
+    const text = await res.text();
+    expect(text).toContain('event: delta\ndata: {"delta":"ok"}');
+    expect(text).toContain('event: end');
+
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0]!;
+    expect(String(upstreamUrl)).toBe(
+      'https://openai-inova-test.openai.azure.com/openai/responses?api-version=2025-04-01-preview',
+    );
+    const body = JSON.parse(String(upstreamInit?.body));
+    expect(body.tool_choice).toBe('auto');
+    expect(Array.isArray(body.tools)).toBe(true);
+    expect(body.tools).toHaveLength(1);
+    expect(body.tools[0]).toMatchObject({ type: 'function', name: 'generate_image' });
+    // The turns still go through `input`, and the system prompt through
+    // `instructions` — same Responses-API shape as the tool-free path.
+    expect(body.input).toEqual([{ role: 'user', content: 'draw a cat' }]);
+    expect(body.instructions).toBe('be brief');
+  });
+
   it('surfaces a Responses-API response.failed event as a proxy error', async () => {
     const fetchMock = vi.fn((input: FetchInput, init?: FetchInit) => {
       const url = String(input);

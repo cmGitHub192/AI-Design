@@ -59,20 +59,20 @@ describe('PLACEHOLDER_SCENARIO_DEFS bindings', () => {
 describe('buildPlaceholderScenarios', () => {
   it('uses prompt examples as selected-chip carousel scenarios when no curated scenario exists', () => {
     const scenarios = buildPlaceholderScenarios({
-      activeChipId: 'audio',
+      activeChipId: 'image',
       resolveTextKey: (key) => en[key],
       examplesForChip: (chipId) => (
-        chipId === 'audio'
-          ? ['Generate a product startup sound']
+        chipId === 'image'
+          ? ['Generate a product startup image']
           : []
       ),
     });
 
     expect(scenarios).toEqual([
       {
-        id: 'audio-prompt-example-1',
-        chipId: 'audio',
-        text: 'Generate a product startup sound',
+        id: 'image-prompt-example-1',
+        chipId: 'image',
+        text: 'Generate a product startup image',
       },
     ]);
   });

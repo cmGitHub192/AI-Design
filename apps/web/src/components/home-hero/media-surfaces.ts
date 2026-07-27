@@ -26,7 +26,9 @@ export interface HomeMediaComposerState {
   editableFieldNames: string[];
 }
 
-export const HOME_MEDIA_CHIP_IDS = ['image', 'video', 'hyperframes', 'audio'] as const;
+// Video and Audio were removed from the Home rail; only Image and the local
+// HyperFrames HTML→MP4 renderer remain as media-composer entry points.
+export const HOME_MEDIA_CHIP_IDS = ['image', 'hyperframes'] as const;
 const NO_TEMPLATE_PLACEHOLDER = 'No template';
 const SFX_AUDIO_DURATIONS_SEC = AUDIO_DURATIONS_SEC.filter((sec) => sec <= 30);
 const MEDIA_RESOLUTIONS = ['2k', '4k'] as const;

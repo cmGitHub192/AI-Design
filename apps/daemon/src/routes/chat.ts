@@ -1,6 +1,7 @@
 import type { Express } from 'express';
 import type { RouteDeps } from '../server-context.js';
 import { seedProviderIfMissing } from '../media/config.js';
+import { generateMedia } from '../media/index.js';
 import {
   buildLegacyMaxTokensParam,
   buildMaxCompletionTokensParam,
@@ -62,6 +63,48 @@ const FEEDBACK_REASON_ALLOWLIST: ReadonlySet<string> = new Set([
 ]);
 
 export interface RegisterChatRoutesDeps extends RouteDeps<'db' | 'design' | 'http' | 'chat' | 'agents' | 'critique' | 'validation' | 'lifecycle' | 'paths' | 'telemetry'> {}
+
+// gpt-5.6 chat models only serve the Azure Responses API, which — unlike the
+// senseaudio/aihubmix Chat-Completions tool loops — carries no in-chat media
+// tool. Without one, a code model asked for an image writes HTML/CSS instead of
+// a raster. This function tool lets the Responses-API chat trigger the media
+// dispatcher (image slot → e.g. Azure gpt-image-2) and embed the real PNG.
+const AZURE_RESPONSES_IMAGE_TOOL = {
+  type: 'function',
+  name: 'generate_image',
+  description:
+    'Generate a raster image (PNG) from a text prompt and insert it into the current project. ' +
+    'Call this whenever the user asks for an image, illustration, poster, photo, logo, or any ' +
+    'picture. Never hand-write HTML/CSS/SVG to fake a raster image — always call this tool so a ' +
+    'real image model renders it.',
+  parameters: {
+    type: 'object',
+    properties: {
+      prompt: {
+        type: 'string',
+        description: 'A detailed visual description of the image to generate.',
+      },
+      aspect_ratio: {
+        type: 'string',
+        enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+        description: 'Aspect ratio of the image. Defaults to 1:1 when omitted.',
+      },
+    },
+    required: ['prompt'],
+    additionalProperties: false,
+  },
+} as const;
+
+const MEDIA_IMAGE_TOOL_ASPECTS = new Set(['1:1', '16:9', '9:16', '4:3', '3:4']);
+function sanitizeImageToolAspect(raw: unknown): string {
+  return typeof raw === 'string' && MEDIA_IMAGE_TOOL_ASPECTS.has(raw) ? raw : '1:1';
+}
+
+// A Responses-API chat may issue 1 tool call then need a follow-up turn to
+// narrate the result; a couple of images in one turn is the realistic ceiling.
+// Bound the request loop so a model that keeps calling tools can't pin the
+// stream open forever.
+const MAX_AZURE_IMAGE_TOOL_LOOPS = 4;
 
 export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
   const { db, design } = ctx;
@@ -1114,6 +1157,67 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
     }
   });
 
+  // Executes the Responses-API `generate_image` tool by routing through the
+  // media dispatcher (image slot → the user's configured image model, e.g.
+  // Azure gpt-image-2). Writes the PNG into the active project and returns the
+  // same-origin file URL the chat renderer embeds. Kept media-dispatcher-backed
+  // (not gateway-specific like the senseaudio/aihubmix tools) so the image
+  // model stays fully decoupled from the chat model.
+  const runAzureImageTool = async (
+    rawArguments: string,
+    opts: { projectId: string; defaultImageModel?: unknown },
+  ): Promise<{ ok: boolean; url?: string; error?: string; kind: 'image' }> => {
+    let args: { prompt?: unknown; aspect_ratio?: unknown; model?: unknown } = {};
+    try {
+      args = rawArguments ? JSON.parse(rawArguments) : {};
+    } catch {
+      return { ok: false, error: 'could not parse tool arguments as JSON', kind: 'image' };
+    }
+    const prompt = typeof args.prompt === 'string' ? args.prompt.trim() : '';
+    if (!prompt) return { ok: false, error: 'prompt is required', kind: 'image' };
+    const aspect = sanitizeImageToolAspect(args.aspect_ratio);
+    // Model resolution: LLM per-call arg > user's BYOK image default > registry
+    // default. The dispatcher validates the id against the catalog.
+    const model =
+      typeof args.model === 'string' && args.model.trim()
+        ? args.model.trim()
+        : typeof opts.defaultImageModel === 'string' && opts.defaultImageModel.trim()
+          ? opts.defaultImageModel.trim()
+          : 'gpt-image-2';
+    try {
+      const meta = await generateMedia({
+        projectRoot: ctx.paths.PROJECT_ROOT,
+        projectsRoot: ctx.paths.PROJECTS_DIR,
+        projectId: opts.projectId,
+        surface: 'image',
+        model,
+        prompt,
+        aspect,
+      });
+      // A stub fallback / provider error means no real image was rendered; the
+      // dispatcher surfaces both so the model narrates the failure honestly
+      // instead of claiming success on a placeholder.
+      if (meta.usedStubFallback || meta.providerError) {
+        return {
+          ok: false,
+          error: meta.providerError || 'image provider returned no image',
+          kind: 'image',
+        };
+      }
+      return {
+        ok: true,
+        url: `/api/projects/${encodeURIComponent(opts.projectId)}/files/${meta.name}`,
+        kind: 'image',
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+        kind: 'image',
+      };
+    }
+  };
+
   app.post('/api/proxy/azure/stream', async (req, res) => {
     /** @type {Partial<ProxyStreamRequest>} */
     const rawProxyBody = req.body || {};
@@ -1122,6 +1226,12 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
     const proxyBody = applyServerProxyDefaults('azure', rawProxyBody);
     const { baseUrl, apiKey, model, systemPrompt, messages, maxTokens, apiVersion } =
       proxyBody;
+    // projectId + byokImageModel are read off the raw body (loosely typed): the
+    // Responses-API `generate_image` tool writes into the active project and
+    // uses byokImageModel as its default image model.
+    const projectId = typeof rawProxyBody.projectId === 'string' ? rawProxyBody.projectId : '';
+    const byokImageModel =
+      typeof rawProxyBody.byokImageModel === 'string' ? rawProxyBody.byokImageModel : undefined;
     if (!baseUrl || !apiKey || !model) {
       return sendApiError(
         res,
@@ -1224,6 +1334,142 @@ export function registerChatRoutes(app: Express, ctx: RegisterChatRoutesDeps) {
         },
         redirect: 'error' as const,
       };
+
+      // Responses-API chat + a real project → wire the in-chat generate_image
+      // tool so the model renders through the media dispatcher instead of
+      // hand-writing HTML. Only the Responses API supports our tool loop here;
+      // the deployment-scoped Chat Completions path (non-5.6 models) keeps the
+      // existing tool-free behavior.
+      const enableImageTool =
+        usesResponsesApi && projectId.length > 0 && isSafeProjectId(projectId);
+      if (enableImageTool) {
+        const guard = createDeltaGuard(sse);
+        const inputItems: any[] = Array.isArray(messages) ? [...messages] : [];
+        for (let loop = 0; loop < MAX_AZURE_IMAGE_TOOL_LOOPS; loop++) {
+          if (signal.aborted) return sse.end();
+          const loopPayload = {
+            model,
+            ...(typeof systemPrompt === 'string' && systemPrompt
+              ? { instructions: systemPrompt }
+              : {}),
+            input: inputItems,
+            max_output_tokens: effectiveMaxTokens,
+            tools: [AZURE_RESPONSES_IMAGE_TOOL],
+            tool_choice: 'auto',
+            stream: true,
+          };
+          const toolResponse = await fetch(url, {
+            ...requestInit,
+            body: JSON.stringify(loopPayload),
+          });
+          if (!toolResponse.ok) {
+            const errorText = await toolResponse.text();
+            console.error(
+              `[proxy:azure] upstream error: ${toolResponse.status} ${redactAuthTokens(errorText)}`,
+            );
+            sendProxyError(sse, `Upstream error: ${toolResponse.status}`, {
+              code: proxyErrorCode(toolResponse.status),
+              details: errorText,
+              retryable: toolResponse.status === 429 || toolResponse.status >= 500,
+            });
+            return sse.end();
+          }
+
+          let streamErr = '';
+          let functionCalls: any[] = [];
+          await streamUpstreamSse(toolResponse, ({ data }: any) => {
+            if (!data) return false;
+            const err =
+              extractStreamErrorMessage(data) || extractAzureResponsesStreamError(data);
+            if (err) {
+              streamErr = err;
+              return true;
+            }
+            if (
+              data.type === 'response.output_text.delta' &&
+              typeof data.delta === 'string'
+            ) {
+              guard.sendDelta(data.delta);
+              if (guard.contaminated) return true;
+            }
+            // The terminal event carries the full output array, so we read the
+            // finalized function_call items (with complete arguments) from there
+            // rather than reassembling argument deltas.
+            if (
+              data.type === 'response.completed' ||
+              data.type === 'response.incomplete'
+            ) {
+              const output = data.response?.output;
+              if (Array.isArray(output)) {
+                functionCalls = output.filter((item: any) => item?.type === 'function_call');
+              }
+              return true;
+            }
+            return false;
+          });
+
+          if (streamErr) {
+            sendProxyError(sse, `Azure error: ${streamErr}`, {});
+            return sse.end();
+          }
+          if (guard.contaminated) {
+            sse.send('end', {});
+            return sse.end();
+          }
+          if (functionCalls.length === 0) {
+            // No tool call this turn → the model's text is the final answer.
+            sse.send('end', {});
+            return sse.end();
+          }
+
+          // Echo each function_call back into the input, run it, and append the
+          // function_call_output so the next turn can narrate + embed the image.
+          for (const call of functionCalls) {
+            const rawArgs =
+              typeof call.arguments === 'string'
+                ? call.arguments
+                : JSON.stringify(call.arguments ?? {});
+            inputItems.push({
+              type: 'function_call',
+              call_id: call.call_id,
+              name: call.name,
+              arguments: rawArgs,
+            });
+            let result: { ok: boolean; url?: string; error?: string; kind: 'image' };
+            if (call.name === 'generate_image') {
+              console.log(
+                `[proxy:azure] generate_image call ${call.call_id} project=${projectId}`,
+              );
+              result = await runAzureImageTool(rawArgs, {
+                projectId,
+                defaultImageModel: byokImageModel,
+              });
+              if (result.ok) {
+                console.log(
+                  `[proxy:azure] generate_image OK: ${call.call_id} → ${result.url}`,
+                );
+              } else {
+                console.warn(
+                  `[proxy:azure] generate_image FAILED: ${call.call_id} — ${result.error}`,
+                );
+              }
+            } else {
+              result = { ok: false, error: `unknown tool ${call.name}`, kind: 'image' };
+            }
+            inputItems.push({
+              type: 'function_call_output',
+              call_id: call.call_id,
+              output: buildToolResultContent(result),
+            });
+          }
+        }
+        console.warn(
+          `[proxy:azure] image tool loop bounded at MAX_AZURE_IMAGE_TOOL_LOOPS=${MAX_AZURE_IMAGE_TOOL_LOOPS}`,
+        );
+        sse.send('end', {});
+        return sse.end();
+      }
+
       let response = await fetch(url, {
         ...requestInit,
         body: JSON.stringify(usesResponsesApi ? responsesPayload : payload),

@@ -10,7 +10,9 @@ import {
   buildFacetCatalog,
   extractCategories,
   extractSubcategories,
+  GALLERY_HIDDEN_CATEGORY_SLUGS,
   isFeaturedPlugin,
+  isGalleryHiddenMediaPlugin,
   resolveDefaultSelection,
 } from '../../src/components/plugins-home/facets';
 
@@ -77,6 +79,20 @@ describe('extractCategories', () => {
         }),
       ),
     ).toEqual(['live-artifact']);
+  });
+
+  it('flags pure video and audio plugins as gallery-hidden but keeps image + HyperFrames', () => {
+    // The community gallery drops video/audio entirely; HyperFrames (mode:video
+    // + hyperframes tag) and Image must survive.
+    expect(isGalleryHiddenMediaPlugin(fixture({ id: 'video', od: { mode: 'video' } }))).toBe(true);
+    expect(isGalleryHiddenMediaPlugin(fixture({ id: 'audio', od: { mode: 'audio' } }))).toBe(true);
+    expect(
+      isGalleryHiddenMediaPlugin(fixture({ id: 'hf', tags: ['hyperframes'], od: { mode: 'video' } })),
+    ).toBe(false);
+    expect(isGalleryHiddenMediaPlugin(fixture({ id: 'image', od: { mode: 'image' } }))).toBe(false);
+    expect(isGalleryHiddenMediaPlugin(fixture({ id: 'deck', od: { mode: 'deck' } }))).toBe(false);
+    // The dropped category slugs match the plugins the predicate hides.
+    expect([...GALLERY_HIDDEN_CATEGORY_SLUGS].sort()).toEqual(['audio', 'video']);
   });
 
   it('splits HyperFrames from the broader video mode', () => {

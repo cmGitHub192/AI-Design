@@ -17,6 +17,8 @@ import {
   applyFacetSelection,
   buildFacetCatalog,
   filterByQuery,
+  GALLERY_HIDDEN_CATEGORY_SLUGS,
+  isGalleryHiddenMediaPlugin,
   resolveDefaultSelection,
   type FacetCatalog,
   type FacetSelection,
@@ -47,6 +49,11 @@ interface UsePluginFacetsArgs {
   savedPluginIds?: ReadonlySet<string>;
   preferDefaultFacet?: boolean;
   locale?: string;
+  // When true (the community gallery), pure video + audio plugins are hidden
+  // from the whole section: no cards, no counts, and their category chips are
+  // dropped from the facet row. The "My plugins" (rich) layout leaves this
+  // false so a user's own installed video/audio plugins still show.
+  excludeMediaGallery?: boolean;
 }
 
 export interface UsePluginFacetsResult {
@@ -78,6 +85,7 @@ export function usePluginFacets({
   savedPluginIds,
   preferDefaultFacet = true,
   locale,
+  excludeMediaGallery = false,
 }: UsePluginFacetsArgs): UsePluginFacetsResult {
   const [mode, setMode] = useState<FilterMode>('all');
   const [selection, setSelection] = useState<FacetSelection>(EMPTY_SELECTION);
@@ -104,9 +112,13 @@ export function usePluginFacets({
   const visiblePlugins = useMemo(
     () =>
       sortByVisualAppeal(
-        plugins.filter((p) => p.manifest?.od?.kind !== 'atom'),
+        plugins.filter(
+          (p) =>
+            p.manifest?.od?.kind !== 'atom' &&
+            (!excludeMediaGallery || !isGalleryHiddenMediaPlugin(p)),
+        ),
       ),
-    [plugins],
+    [plugins, excludeMediaGallery],
   );
 
   // Re-rank for the "newest" order on top of the visual-appeal base:
@@ -123,7 +135,18 @@ export function usePluginFacets({
     [savedPluginIds, orderedPlugins],
   );
 
-  const catalog = useMemo(() => buildFacetCatalog(visiblePlugins), [visiblePlugins]);
+  const catalog = useMemo(() => {
+    const full = buildFacetCatalog(visiblePlugins);
+    if (!excludeMediaGallery) return full;
+    // The video/audio plugins are already filtered out of visiblePlugins, so
+    // their counts are 0; drop the category chips too since CategoryRow renders
+    // every option regardless of count.
+    const hidden = new Set(GALLERY_HIDDEN_CATEGORY_SLUGS);
+    return {
+      category: full.category.filter((o) => !hidden.has(o.slug)),
+      subcategory: full.subcategory,
+    };
+  }, [visiblePlugins, excludeMediaGallery]);
 
   useEffect(() => {
     if (bootstrapped) return;

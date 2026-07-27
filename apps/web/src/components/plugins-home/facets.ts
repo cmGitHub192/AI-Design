@@ -133,6 +133,19 @@ function isVideoPlugin(record: InstalledPluginRecord): boolean {
   return byMode('video')(record) && !isHyperFramesPlugin(record);
 }
 
+// Community gallery hides pure video + audio plugins entirely (this fork
+// only ships the Image media surface plus the local HyperFrames renderer).
+// HyperFrames plugins are mode:'video' but are NOT hidden — they belong to
+// their own category. Scoped to the gallery layout by usePluginFacets so a
+// user's own installed video/audio plugins still show under "My plugins".
+export function isGalleryHiddenMediaPlugin(record: InstalledPluginRecord): boolean {
+  return isVideoPlugin(record) || byMode('audio')(record);
+}
+
+// Category slugs the community gallery drops from the facet row (their plugins
+// are filtered out upstream, so the chips would otherwise render at count 0).
+export const GALLERY_HIDDEN_CATEGORY_SLUGS: readonly string[] = ['video', 'audio'];
+
 function isLiveArtifactPlugin(record: InstalledPluginRecord): boolean {
   return (CURATED_LIVE_ARTIFACT_PLUGIN_IDS as readonly string[]).includes(record.id);
 }

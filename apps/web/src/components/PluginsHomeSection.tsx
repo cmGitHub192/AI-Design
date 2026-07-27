@@ -109,6 +109,9 @@ export function PluginsHomeSection({
     savedPluginIds,
     preferDefaultFacet: cardLayout === 'gallery' ? false : preferDefaultFacet,
     locale,
+    // The community gallery hides pure video + audio plugins entirely; the
+    // "My plugins" (rich) layout keeps them so users still see their own.
+    excludeMediaGallery: cardLayout === 'gallery',
   });
   const renderedPlugins = useMemo(
     () => filtered.slice(0, renderLimit),
