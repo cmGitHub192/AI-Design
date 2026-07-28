@@ -575,6 +575,13 @@ export function EntryShell({
   useEffect(() => {
     writeStoredRailOpen(railOpen);
   }, [railOpen]);
+  // On a narrow (mobile) viewport start with the labeled sidebar collapsed so it
+  // doesn't cover the content; the hamburger toggle opens it as an overlay.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 900) {
+      setRailOpen(false);
+    }
+  }, []);
   const [localProviderModelsCache, setLocalProviderModelsCache] =
     useState<ProviderModelsCache>({});
   const hasSharedProviderModelsCache =
@@ -975,6 +982,13 @@ export function EntryShell({
           open={railOpen}
           onClose={() => setRailOpen(false)}
         />
+        <button
+          type="button"
+          className="entry-rail-backdrop"
+          aria-label={t('entry.navCollapse')}
+          onClick={() => setRailOpen(false)}
+          tabIndex={railOpen ? 0 : -1}
+        />
         <main className="entry-main entry-main--scroll" ref={entryMainScrollRef}>
           <div className="entry-main__topbar">
             <button
@@ -985,7 +999,7 @@ export function EntryShell({
               aria-expanded={railOpen}
               data-testid="entry-rail-toggle"
             >
-              <Icon name="panel-left" size={20} />
+              <Icon name="menu" size={20} />
             </button>
             <div className="entry-main__topbar-chips entry-main__topbar-chips--icon-only">
               {view === 'home' ? null : executionSwitcher}

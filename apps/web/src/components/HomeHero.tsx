@@ -120,6 +120,17 @@ export interface HomeHeroSubmitHandler {
   (): void;
 }
 
+// Scenarios curated out of the "Start with a template…" starter slider. They
+// stay in the catalog and remain reachable through the footer Template
+// dropdown; this only trims the illustrated card rail. Exported so tests assert
+// the same curated set instead of duplicating the ids.
+export const STARTER_SLIDER_HIDDEN_CHIP_IDS: readonly string[] = [
+  'web-clone',
+  'document',
+  'hyperframes',
+  'webgl',
+];
+
 // The homepage prompt input now shares the project composer's Lexical
 // editor, so the forwarded handle is a small focus surface rather than a
 // raw <textarea>. HomeView drives `focusEnd()` after seeding a prompt
@@ -664,11 +675,17 @@ export const HomeHero = forwardRef<HomeHeroHandle, Props>(function HomeHero(
     [activeChipId],
   );
   // Footer Template picker options: the ordered create-scenario chips (pure
-  // project-type templates — Slides / Prototype / Wireframe / Document / …).
-  // Excludes action chips (Brand Kit / Figma) that navigate away instead of
-  // seeding a template, so the dropdown matches the rail's template set.
+  // project-type templates — Slides / Prototype / Wireframe / …). Excludes
+  // action chips (Brand Kit / Figma) that navigate away instead of seeding a
+  // template, and the scenarios curated out of the starter surfaces
+  // (STARTER_SLIDER_HIDDEN_CHIP_IDS) so the dropdown matches the trimmed slider.
   const templateChips = useMemo(
-    () => orderedCreateChips().filter((chip) => chip.action.kind === 'apply-scenario'),
+    () =>
+      orderedCreateChips().filter(
+        (chip) =>
+          chip.action.kind === 'apply-scenario' &&
+          !STARTER_SLIDER_HIDDEN_CHIP_IDS.includes(chip.id),
+      ),
     [],
   );
   const activeExamplePlugins = useMemo(
@@ -1225,14 +1242,23 @@ export const HomeHero = forwardRef<HomeHeroHandle, Props>(function HomeHero(
 
   return (
     <section ref={homeHeroRef} className="home-hero" data-testid="home-hero">
-      <div className="home-hero__brand" aria-hidden>
-        <span className="home-hero__brand-mark od-brand-glyph" />
-        <span className="home-hero__brand-name">{t('app.brand')}</span>
+      <div className="home-hero__header">
+        <div className="home-hero__intro">
+          <div className="home-hero__brand">
+            <span className="home-hero__brand-mark od-brand-glyph" aria-hidden />
+            <span className="home-hero__brand-name">{t('app.brand')}</span>
+          </div>
+          <h1 className="home-hero__title">{t('homeHero.title')}</h1>
+          <p className="home-hero__subtitle">
+            {t('homeHero.subtitlePrefix')}
+          </p>
+        </div>
+        <div className="home-hero__decoration" aria-hidden>
+          <span className="home-hero__decoration-card">
+            <span className="home-hero__decoration-glyph od-brand-glyph" />
+          </span>
+        </div>
       </div>
-      <h1 className="home-hero__title">{t('homeHero.title')}</h1>
-      <p className="home-hero__subtitle">
-        {t('homeHero.subtitlePrefix')}
-      </p>
 
       <div
         className={`home-hero__input-card${
@@ -2056,6 +2082,7 @@ export const HomeHero = forwardRef<HomeHeroHandle, Props>(function HomeHero(
             pluginsLoading={pluginsLoading}
             onPickChip={handlePickTaskChip}
             variant="tabs"
+            excludeChipIds={STARTER_SLIDER_HIDDEN_CHIP_IDS}
             pulseChipId={guidePulseChipId}
             onHoverChip={setPreviewTemplateId}
           >
@@ -3278,6 +3305,10 @@ interface RailGroupProps {
   pluginsLoading: boolean;
   onPickChip: (chip: HomeHeroChip) => void;
   variant?: 'rail' | 'tabs';
+  // Chip ids to drop from THIS rail instance only (the chips stay in the
+  // catalog and the footer Template dropdown). Used to curate the starter
+  // slider without removing the scenarios everywhere.
+  excludeChipIds?: readonly string[];
   // First-run guide: this chip carries the attention sheen.
   pulseChipId?: string | null;
   // Hover-preview hook: the create rail reports which chip the pointer is over
@@ -3294,6 +3325,7 @@ function RailGroup({
   pluginsLoading,
   onPickChip,
   variant = 'rail',
+  excludeChipIds,
   pulseChipId = null,
   onHoverChip,
   children,
@@ -3301,11 +3333,14 @@ function RailGroup({
   const t = useT();
   // The inline create rail leads with the slide deck and runs through the core
   // build scenarios in a fixed order (see `orderedCreateChips`); every other
-  // group renders in catalog order.
-  const chips = useMemo(
-    () => (group === 'create' ? orderedCreateChips() : chipsForGroup(group)),
-    [group],
-  );
+  // group renders in catalog order. `excludeChipIds` curates this instance
+  // without touching the shared catalog or the Template dropdown.
+  const chips = useMemo(() => {
+    const base = group === 'create' ? orderedCreateChips() : chipsForGroup(group);
+    return excludeChipIds && excludeChipIds.length > 0
+      ? base.filter((chip) => !excludeChipIds.includes(chip.id))
+      : base;
+  }, [group, excludeChipIds]);
   const isTabs = variant === 'tabs';
 
   // Edge auto-scroll so the overflowing scenario rail stays reachable without a

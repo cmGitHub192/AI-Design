@@ -93,7 +93,7 @@ describe('HomeView media composer options', () => {
     expect(document.body.contains(popover)).toBe(true);
   });
 
-  it('surfaces the persistent design-system picker and no footer pills for Image or HyperFrames', async () => {
+  it('surfaces the persistent design-system picker and no footer pills for Image', async () => {
     stubFetch();
     renderHome();
 
@@ -111,14 +111,6 @@ describe('HomeView media composer options', () => {
     expect(screen.queryByTestId('home-hero-footer-option-ratio')).toBeNull();
     expect(screen.queryByTestId('home-hero-footer-option-resolution')).toBeNull();
     expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
-
-    // HyperFrames keeps no pre-flight pills at all.
-    await clickHomeRailChip('hyperframes');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(promptIsEmpty()).toBe(true);
-    expect(screen.queryByTestId('home-hero-footer-option-ratio')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-duration')).toBeNull();
-    expect(screen.queryByTestId('home-hero-footer-option-model')).toBeNull();
     // Inline `{{slot}}` prompt widgets are gone too; nothing is injected into
     // the prompt body.
     expect(screen.queryByTestId('home-hero-prompt-slot-text')).toBeNull();
@@ -169,20 +161,6 @@ describe('HomeView media composer options', () => {
     }
   });
 
-  it('switches media chips without opening the replacement dialog', async () => {
-    stubFetch();
-    renderHome();
-
-    await clickHomeRailChip('image');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(screen.queryByRole('dialog', { name: /replace current prompt/i })).toBeNull();
-
-    await setHomePrompt('Make this prompt personally tuned.');
-    await clickHomeRailChip('hyperframes');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(screen.queryByRole('dialog', { name: /replace current prompt/i })).toBeNull();
-  });
-
   it('hides the full selector grid for media surfaces', async () => {
     stubFetch();
     renderHome();
@@ -192,31 +170,7 @@ describe('HomeView media composer options', () => {
     expect(screen.queryByRole('combobox', { name: 'Template' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Model' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Ratio' })).toBeNull();
-
-    await clickHomeRailChip('hyperframes');
-    await waitFor(() => expect(screen.getByTestId('home-hero-template-trigger').textContent).not.toContain('None'));
-    expect(screen.queryByRole('combobox', { name: 'Duration' })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: 'Template' })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: 'Model' })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: 'Ratio' })).toBeNull();
     expect(promptIsEmpty()).toBe(true);
-  });
-
-  it('submits the selected HyperFrames template metadata', async () => {
-    stubFetch();
-    const onSubmit = vi.fn();
-    renderHome({ onSubmit });
-
-    await clickHomeRailChip('hyperframes');
-    await setHomePrompt('Make a HyperFrames motion video.');
-    await submitHome();
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-        projectMetadata: expect.objectContaining({
-          promptTemplate: expect.objectContaining({ id: 'hyperframes-caption' }),
-        }),
-      }));
-    });
   });
 
   it('updates submitted template metadata after media templates load', async () => {
@@ -342,26 +296,6 @@ describe('HomeView media composer options', () => {
     }
     // The required brief inputs the apply validates against survive the strip.
     expect(snapshotInputs).toHaveProperty('subject');
-  });
-
-  it('submits HyperFrames as a video project with the hyperframes-html model', async () => {
-    stubFetch();
-    const onSubmit = vi.fn();
-    renderHome({ onSubmit });
-
-    await clickHomeRailChip('hyperframes');
-    await setHomePrompt('Create a HyperFrames launch bumper.');
-    // submit() re-applies the plugin from the deferral-stripped inputs before
-    // forwarding, so onSubmit fires after the apply round-trip resolves.
-    await submitHome();
-
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-      projectKind: 'video',
-      projectMetadata: expect.objectContaining({
-        kind: 'video',
-        videoModel: 'hyperframes-html',
-      }),
-    })));
   });
 
   it('preserves od-media-generation required inputs when applying media chips', async () => {

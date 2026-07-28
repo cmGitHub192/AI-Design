@@ -9,7 +9,6 @@
 // floating settings cog in the top-right corner of the main content.
 
 import { useEffect, useRef, type ReactNode } from 'react';
-import { EntryHelpMenu } from './EntryHelpMenu';
 import { Icon } from './Icon';
 import { useT } from '../i18n';
 import { LIBRARY_UI_VISIBLE } from '../features/libraryUi';
@@ -34,6 +33,18 @@ interface Props {
   open: boolean;
   /** Collapse the rail — called after a destination is chosen or the user dismisses it. */
   onClose: () => void;
+  /** Footer account row — placeholder until wired to a real account source. */
+  userName?: string;
+  userAvatarUrl?: string;
+  onSignOut?: () => void;
+}
+
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  const first = parts[0]![0] ?? '';
+  const last = parts.length > 1 ? parts[parts.length - 1]![0] ?? '' : '';
+  return `${first}${last}`.toUpperCase();
 }
 
 interface NavButtonProps {
@@ -43,14 +54,15 @@ interface NavButtonProps {
   onClick: () => void;
   disabled?: boolean;
   testId?: string;
+  variant?: 'default' | 'primary';
   children: ReactNode;
 }
 
-function NavButton({ active, ariaLabel, tooltip, onClick, disabled, testId, children }: NavButtonProps) {
+function NavButton({ active, ariaLabel, tooltip, onClick, disabled, testId, children, variant }: NavButtonProps) {
   return (
     <button
       type="button"
-      className={`entry-nav-rail__btn${active ? ' is-active' : ''}`}
+      className={`entry-nav-rail__btn${active ? ' is-active' : ''}${variant === 'primary' ? ' entry-nav-rail__btn--primary' : ''}`}
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
@@ -58,7 +70,8 @@ function NavButton({ active, ariaLabel, tooltip, onClick, disabled, testId, chil
       data-tooltip={tooltip}
       {...(testId ? { 'data-testid': testId } : {})}
     >
-      {children}
+      <span className="entry-nav-rail__btn-icon" aria-hidden="true">{children}</span>
+      <span className="entry-nav-rail__btn-label">{tooltip}</span>
     </button>
   );
 }
@@ -70,6 +83,9 @@ export function EntryNavRail({
   newProjectDisabled = false,
   open,
   onClose,
+  userName = 'Usuario',
+  userAvatarUrl,
+  onSignOut,
 }: Props) {
   const t = useT();
   const brandLabel = t('app.brand');
@@ -119,6 +135,7 @@ export function EntryNavRail({
               className="entry-nav-rail__logo-img od-brand-glyph"
               aria-hidden="true"
             />
+            <span className="entry-nav-rail__logo-name">{brandLabel}</span>
           </button>
           <button
             type="button"
@@ -138,6 +155,7 @@ export function EntryNavRail({
           onClick={onNewProject}
           disabled={newProjectDisabled}
           testId="entry-nav-new-project"
+          variant="primary"
         >
           <Icon name="plus" size={18} />
         </NavButton>
@@ -208,8 +226,35 @@ export function EntryNavRail({
         </NavButton>
       </div>
       <div className="entry-nav-rail__footer">
-        <div className="entry-nav-rail__divider" role="separator" />
-        <EntryHelpMenu />
+        <div className="entry-nav-rail__user">
+          {userAvatarUrl ? (
+            <img
+              className="entry-nav-rail__avatar"
+              src={userAvatarUrl}
+              alt=""
+              aria-hidden="true"
+            />
+          ) : (
+            <span
+              className="entry-nav-rail__avatar entry-nav-rail__avatar--initials"
+              aria-hidden="true"
+            >
+              {initialsFrom(userName)}
+            </span>
+          )}
+          <span className="entry-nav-rail__user-name">{userName}</span>
+        </div>
+        <button
+          type="button"
+          className="entry-nav-rail__btn entry-nav-rail__signout"
+          onClick={() => onSignOut?.()}
+          data-testid="entry-nav-signout"
+        >
+          <span className="entry-nav-rail__btn-icon" aria-hidden="true">
+            <Icon name="log-out" size={18} />
+          </span>
+          <span className="entry-nav-rail__btn-label">{t('settings.amrLogout')}</span>
+        </button>
       </div>
     </nav>
   );

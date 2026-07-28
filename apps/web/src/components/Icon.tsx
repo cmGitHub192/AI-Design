@@ -54,6 +54,7 @@ export type IconName =
   | 'minimize'
   | 'minus'
   | 'more-horizontal'
+  | 'menu'
   | 'orbit'
   | 'paint-bucket'
   | 'panel-left'
@@ -409,6 +410,14 @@ export function Icon({ name, size = 14, strokeWidth = 1.6, ...rest }: Props) {
         <svg {...common}>
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <line x1="9" y1="3" x2="9" y2="21" />
+        </svg>
+      );
+    case 'menu':
+      return (
+        <svg {...common}>
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
         </svg>
       );
     case 'slides':

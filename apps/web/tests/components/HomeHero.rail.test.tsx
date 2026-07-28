@@ -16,7 +16,11 @@ vi.mock('../../src/components/home-hero/PlaceholderCarousel', () => ({
   PlaceholderCarousel: () => null,
 }));
 
-import { HomeHero, homeHeroExamplePluginsForChip } from '../../src/components/HomeHero';
+import {
+  HomeHero,
+  homeHeroExamplePluginsForChip,
+  STARTER_SLIDER_HIDDEN_CHIP_IDS,
+} from '../../src/components/HomeHero';
 import {
   HOME_HERO_CHIPS,
   findChip,
@@ -107,7 +111,11 @@ describe('HomeHero intent rail', () => {
     renderHero();
     const tabs = screen.getByTestId('home-hero-type-tabs');
     for (const chip of HOME_HERO_CHIPS) {
-      if (chip.group === 'create') {
+      // Create chips render as slider tabs, EXCEPT the ones curated out of the
+      // starter slider — those (like migrate chips here) render no rail tab.
+      const shownInSlider =
+        chip.group === 'create' && !STARTER_SLIDER_HIDDEN_CHIP_IDS.includes(chip.id);
+      if (shownInSlider) {
         const node = screen.getByTestId(`home-hero-rail-${chip.id}`);
         expect(node).toBeTruthy();
         expect(tabs.contains(node)).toBe(true);
@@ -483,7 +491,10 @@ describe('HomeHero intent rail', () => {
 
   it('disables every visible chip while a plugin apply is in flight', () => {
     renderHero({ pendingPluginId: 'od-figma-migration', pendingChipId: 'figma' });
-    for (const chip of HOME_HERO_CHIPS.filter((item) => item.group === 'create')) {
+    for (const chip of HOME_HERO_CHIPS.filter(
+      (item) =>
+        item.group === 'create' && !STARTER_SLIDER_HIDDEN_CHIP_IDS.includes(item.id),
+    )) {
       const node = screen.getByTestId(`home-hero-rail-${chip.id}`);
       expect((node as HTMLButtonElement).disabled).toBe(true);
     }

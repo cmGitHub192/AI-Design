@@ -89,7 +89,10 @@ describe('HomeHero scenario cards', () => {
 
   it('adds the finer-grained scenarios as create cards routed to a scenario plugin', () => {
     renderHero();
-    for (const id of ['wireframe', 'mobile', 'document']) {
+    // `document` is curated out of the starter slider (STARTER_SLIDER_HIDDEN_CHIP_IDS),
+    // so it no longer renders a rail card; it stays reachable via the Template
+    // dropdown and its chip action is still asserted below.
+    for (const id of ['wireframe', 'mobile']) {
       const card = screen.getByTestId(`home-hero-rail-${id}`);
       const tabs = screen.getByTestId('home-hero-type-tabs');
       expect(tabs.contains(card)).toBe(true);

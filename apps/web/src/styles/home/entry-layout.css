@@ -10,7 +10,8 @@
    actions, so the entry view does not render `AppChromeHeader`. */
 .entry-shell--no-header {
   grid-template-rows: 1fr;
-  --entry-rail-width: 56px;
+  /* Labeled sidebar (icon + text) instead of the legacy 56px icon-only rail. */
+  --entry-rail-width: 232px;
 }
 
 .entry-shell--onboarding {
@@ -180,10 +181,10 @@
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-/* Hide the topbar toggle the instant the rail docks — a fade here would
-   cross with the rail's logo sliding in and read as a flash. */
+/* The hamburger stays visible whether the rail is docked or collapsed, so it
+   toggles the sidebar both ways (open and close). */
 .entry--rail-open .entry-rail-toggle {
-  display: none;
+  display: inline-flex;
 }
 .entry-nav-rail::after {
   content: '';
@@ -4803,5 +4804,205 @@
   .onboarding-view__build-actions .onboarding-view__secondary,
   .onboarding-view__build-actions .onboarding-view__primary {
     flex: 1 1 180px;
+  }
+}
+
+/* ============================================================
+   Labeled sidebar redesign (icon + text nav) — overrides the
+   legacy icon-only rail above. Full-height panel with brand,
+   a primary "New project" action, labeled destinations, and a
+   help footer. Purely visual; markup/behavior unchanged.
+   ============================================================ */
+.entry-nav-rail {
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: 16px 12px 14px;
+  border-right: 1px solid var(--border);
+}
+.entry-nav-rail__group {
+  align-items: stretch;
+  gap: 3px;
+}
+.entry-nav-rail__footer {
+  align-items: stretch;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* Brand row: glyph + wordmark on the left, collapse control on the right. */
+.entry-nav-rail__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 6px 10px;
+}
+.entry-nav-rail__logo {
+  width: auto;
+  height: auto;
+  gap: 10px;
+  overflow: visible;
+  justify-content: flex-start;
+}
+.entry-nav-rail__logo-img {
+  position: static;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+}
+.entry-nav-rail__logo-name {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Labeled destination buttons: full-width rows, icon + text. */
+.entry-nav-rail__btn {
+  width: 100%;
+  height: auto;
+  min-height: 40px;
+  padding: 9px 12px;
+  gap: 12px;
+  justify-content: flex-start;
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.entry-nav-rail__btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+.entry-nav-rail__btn-icon > svg {
+  width: 20px;
+  height: 20px;
+}
+.entry-nav-rail__btn-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry-nav-rail__btn.is-active {
+  background: var(--accent-tint);
+  color: var(--accent);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+/* Primary "New project" action stands out like the mockup's CTA. */
+.entry-nav-rail__btn--primary {
+  margin-bottom: 8px;
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.entry-nav-rail__btn--primary:not(.is-active):hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+  color: #fff;
+  border-color: transparent;
+}
+.entry-nav-rail__btn--primary:disabled:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Labels make the hover tooltip redundant — suppress it. */
+.entry-nav-rail__btn[data-tooltip]::before,
+.entry-nav-rail__btn[data-tooltip]::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Footer account row: avatar + name, then a sign-out action. */
+.entry-nav-rail__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  margin-bottom: 2px;
+}
+.entry-nav-rail__avatar {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #d16bff));
+}
+.entry-nav-rail__user-name {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry-nav-rail__signout {
+  color: var(--text-muted);
+}
+.entry-nav-rail__signout:not(.is-active):hover {
+  background: color-mix(in srgb, var(--danger, #e5484d) 12%, var(--bg-panel));
+  color: var(--danger, #e5484d);
+  border-color: transparent;
+}
+
+/* The topbar hamburger is the single sidebar toggle now, so the rail's inline
+   collapse control is redundant. */
+.entry-nav-rail__collapse {
+  display: none;
+}
+.entry-rail-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+}
+
+/* Backdrop behind the sidebar when it overlays on narrow viewports. Hidden on
+   desktop and whenever the rail is collapsed. */
+.entry-rail-backdrop {
+  display: none;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Responsive: below 900px the labeled sidebar overlays the content (fixed)
+   instead of pushing it, with a click-to-close backdrop. */
+@media (max-width: 900px) {
+  .entry-shell--no-header .entry.entry--rail-open {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+  .entry--rail-open .entry-nav-rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--entry-rail-width);
+    z-index: 60;
+    box-shadow: 0 10px 44px rgba(15, 12, 40, 0.32);
+  }
+  .entry--rail-open .entry-rail-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(15, 12, 40, 0.42);
   }
 }

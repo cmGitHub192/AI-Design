@@ -8,11 +8,12 @@
 // project_kind=web_clone on project_create_result.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { HomeView } from '../../src/components/HomeView';
 import { I18nProvider } from '../../src/i18n';
 import { writeHomeGuideStage } from '../../src/components/home-hero/firstRunGuide';
+import { requestHomeChip } from '../../src/runtime/home-intent';
 
 const analyticsMocks = vi.hoisted(() => ({ track: vi.fn() }));
 
@@ -96,6 +97,17 @@ function renderHome() {
   );
 }
 
+// Website clone is curated out of the Home composer surfaces (starter slider +
+// Template dropdown) but still exists in the catalog, so activate it through the
+// Home chip-intent latch — the same path a deep link / cross-tab jump uses.
+async function activateWebCloneChip() {
+  await act(async () => {
+    requestHomeChip('web-clone');
+    await Promise.resolve();
+  });
+  await screen.findByTestId('home-hero-prompt-examples');
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   analyticsMocks.track.mockClear();
@@ -109,7 +121,7 @@ describe('web-clone example-card tracking', () => {
     stubPlugins();
     renderHome();
 
-    fireEvent.click(await screen.findByTestId('home-hero-rail-web-clone'));
+    await activateWebCloneChip();
     // Text prompt cards (site variant: logo tile + bare domain), not plugin cards.
     const textCards = await screen.findAllByTestId('home-hero-prompt-example');
     expect(textCards.length).toBeGreaterThan(0);
@@ -131,7 +143,7 @@ describe('web-clone example-card tracking', () => {
     stubPlugins();
     renderHome();
 
-    fireEvent.click(await screen.findByTestId('home-hero-rail-web-clone'));
+    await activateWebCloneChip();
     const siteCards = await screen.findAllByTestId('home-hero-prompt-example');
     const domains = siteCards.map((c) => (c.textContent ?? '').trim());
     expect(domains).toEqual(['open-design.ai']);
@@ -146,7 +158,7 @@ describe('web-clone example-card tracking', () => {
     stubPlugins();
     renderHome();
 
-    fireEvent.click(await screen.findByTestId('home-hero-rail-web-clone'));
+    await activateWebCloneChip();
     const siteCard = (await screen.findAllByTestId('home-hero-prompt-example'))[0]!;
     const logo = siteCard.querySelector<HTMLImageElement>('.home-hero__site-badge img');
     expect(logo?.getAttribute('src')).toBe('/logo.svg');
@@ -159,7 +171,7 @@ describe('web-clone example-card tracking', () => {
     stubPlugins();
     renderHome();
 
-    fireEvent.click(await screen.findByTestId('home-hero-rail-web-clone'));
+    await activateWebCloneChip();
     const siteCard = (await screen.findAllByTestId('home-hero-prompt-example'))[0]!;
     const localLogo = siteCard.querySelector<HTMLImageElement>('.home-hero__site-badge img');
     expect(localLogo?.getAttribute('src')).toBe('/logo.svg');
@@ -179,7 +191,7 @@ describe('web-clone example-card tracking', () => {
     stubPlugins();
     renderHome();
 
-    fireEvent.click(await screen.findByTestId('home-hero-rail-web-clone'));
+    await activateWebCloneChip();
     const textCards = await screen.findAllByTestId('home-hero-prompt-example');
     analyticsMocks.track.mockClear(); // ignore the chip-pick ui_click; assert the card event
     fireEvent.click(textCards[0]!);
