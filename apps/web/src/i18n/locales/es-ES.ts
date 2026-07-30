@@ -745,7 +745,7 @@ export const esES: Dict = {
   'homeHero.chip.prototype': 'Prototipo',
   'homeHero.chip.webClone': 'Clon de sitio web',
   'homeHero.chip.liveArtifact': 'Artefacto en vivo',
-  'homeHero.chip.deck': 'Presentación de diapositivas',
+  'homeHero.chip.deck': 'Diapositivas',
   'homeHero.chip.image': 'Imagen',
   'homeHero.chip.video': 'Vídeo',
   'homeHero.chip.hyperframes': 'HyperFrames',

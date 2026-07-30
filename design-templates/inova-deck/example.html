@@ -1,0 +1,174 @@
+<!doctype html>
+<!-- Inova Solutions deck — baked gallery sample (FaxiAI + FaxiHive). -->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FaxiAI + FaxiHive · Inova Solutions</title>
+  <style>
+    :root {
+      --brand-navy:#1f3a63; --brand-blue:#2e75b6; --brand-cyan:#29abe2; --brand-green:#8dc63f;
+      --bg:#fff; --surface:#fff; --fg:#1f2937; --muted:#5b6472; --border:#e4e8ef; --card-fg:#fff;
+      --brand-bg: url('assets/background.png');
+      --font-display:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+      --font-body:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+      --font-mono:ui-monospace,'Segoe UI Mono','SF Mono',Menlo,monospace;
+    }
+    *,*::before,*::after{box-sizing:border-box;}
+    html,body{margin:0;height:100%;}
+    body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:18px;line-height:1.5;
+      -webkit-font-smoothing:antialiased;display:flex;overflow-x:auto;overflow-y:hidden;
+      scroll-snap-type:x mandatory;scroll-behavior:smooth;}
+    body::-webkit-scrollbar{display:none;}
+    h1,h2,h3{text-wrap:balance;} p{text-wrap:pretty;}
+    .slide{flex:0 0 100vw;width:100vw;height:100vh;scroll-snap-align:start;position:relative;overflow:hidden;
+      background-color:var(--bg);background-image:var(--brand-bg);background-size:cover;background-position:center;
+      background-repeat:no-repeat;display:flex;}
+    .slide__stage{position:relative;z-index:1;width:100%;height:100%;
+      padding:clamp(40px,6vh,72px) clamp(64px,8vw,128px) clamp(56px,8vh,92px);display:flex;flex-direction:column;}
+    .slide--cover .slide__stage{align-items:center;justify-content:center;text-align:center;}
+    .slide-head{margin-left:clamp(150px,15vw,240px);margin-bottom:clamp(20px,4vh,44px);}
+    .slide-title{font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;
+      color:var(--brand-navy);font-size:clamp(34px,4.4vw,60px);line-height:1.02;margin:0;}
+    .kicker{font-family:var(--font-display);font-weight:700;color:var(--brand-green);font-size:clamp(16px,1.7vw,24px);margin:8px 0 0;}
+    .cover-title{font-family:var(--font-display);font-weight:800;text-transform:uppercase;color:var(--brand-navy);
+      font-size:clamp(52px,8vw,108px);line-height:1;letter-spacing:-0.01em;margin:0 0 18px;max-width:18ch;}
+    .cover-sub{font-style:italic;color:var(--fg);font-size:clamp(20px,2.4vw,34px);margin:0;max-width:40ch;}
+    .stage-body{flex:1 1 auto;display:flex;align-items:center;min-height:0;}
+    .stage-body.top{align-items:flex-start;}
+    .lead{font-size:clamp(18px,1.5vw,24px);line-height:1.55;color:var(--fg);max-width:30ch;margin:0;}
+    .cols{display:grid;gap:clamp(24px,3vw,56px);width:100%;align-items:center;}
+    .cols-2{grid-template-columns:1fr 1fr;} .cols-121{grid-template-columns:1fr 1.2fr 1fr;}
+    .col-title{font-family:var(--font-display);font-weight:800;text-transform:uppercase;color:var(--brand-blue);
+      font-size:clamp(22px,2.2vw,32px);line-height:1.1;margin:0 0 14px;}
+    .col-text{color:var(--fg);font-size:clamp(16px,1.3vw,20px);line-height:1.5;margin:0;}
+    .checklist{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,2.2vh,26px);}
+    .checklist li{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;}
+    .checklist li::before{content:"";width:30px;height:30px;margin-top:2px;border-radius:999px;background:var(--brand-navy)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/16px no-repeat;flex:0 0 auto;}
+    .checklist li span{font-size:clamp(17px,1.4vw,22px);line-height:1.4;color:var(--fg);}
+    .img-frame{border:4px solid var(--brand-cyan);border-radius:18px;overflow:hidden;background:#eef3f8;aspect-ratio:4/3;
+      display:grid;place-items:center;color:var(--muted);font-size:13px;}
+    .card-grid{display:grid;gap:clamp(18px,2vw,32px);width:100%;} .card-grid.n4{grid-template-columns:repeat(4,1fr);}
+    .card{background:var(--brand-blue);color:var(--card-fg);border-radius:16px;padding:clamp(20px,2vw,30px);
+      padding-top:clamp(44px,5vh,64px);position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;}
+    .card__icon{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);width:clamp(56px,6vw,84px);height:clamp(56px,6vw,84px);
+      border-radius:999px;background:#fff;border:3px solid var(--brand-cyan);}
+    .card__title{font-weight:800;text-transform:uppercase;font-size:clamp(15px,1.2vw,19px);line-height:1.15;margin:0;}
+    .center-title{font-family:var(--font-display);font-weight:800;color:var(--brand-navy);font-size:clamp(28px,3.4vw,46px);
+      text-align:center;margin:0 0 clamp(24px,4vh,48px);}
+    .footer-url{position:absolute;right:clamp(24px,4vw,56px);bottom:clamp(18px,3vh,30px);font-size:13px;color:var(--brand-green);z-index:2;}
+    .deck-progress{position:fixed;top:0;left:0;height:3px;background:var(--brand-green);width:0;z-index:20;transition:width .18s ease;}
+    .deck-counter{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:12px;
+      color:var(--brand-navy);background:rgba(255,255,255,.9);padding:5px 12px;border-radius:999px;border:1px solid var(--border);z-index:20;}
+  </style>
+</head>
+<body>
+  <section class="slide slide--cover" data-screen-label="01 Cover">
+    <div class="slide__stage">
+      <h1 class="cover-title">FaxiAI + FaxiHive</h1>
+      <p class="cover-sub">IA agéntica nativa de Azure y Microsoft 365.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-screen-label="02 El problema">
+    <div class="slide__stage">
+      <div class="slide-head"><h2 class="slide-title">El problema</h2></div>
+      <div class="stage-body">
+        <div class="cols cols-121">
+          <div><h3 class="col-title">Ganar el proyecto</h3><p class="col-text">Una propuesta técnica nos tomaba 3 días.</p></div>
+          <div class="img-frame">El conocimiento del equipo se evapora todos los días.</div>
+          <div><h3 class="col-title">Entregar el proyecto</h3><p class="col-text">Los compromisos se pierden, los sprints se improvisan y el líder coordina más de lo que decide.</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </section>
+
+  <section class="slide" data-screen-label="03 La visión">
+    <div class="slide__stage">
+      <div class="slide-head"><h2 class="slide-title">La visión</h2><p class="kicker">Dos capas de "IQ" accionables</p></div>
+      <div class="stage-body">
+        <div class="cols cols-2">
+          <div><div class="img-frame" style="aspect-ratio:16/10;">FaxiAI</div>
+            <p class="card__title" style="background:var(--brand-blue);color:#fff;border-radius:8px;padding:10px;margin:12px 0 0;">Foundry IQ accionable</p></div>
+          <div><div class="img-frame" style="aspect-ratio:16/10;">Faxi Hive</div>
+            <p class="card__title" style="background:var(--brand-blue);color:#fff;border-radius:8px;padding:10px;margin:12px 0 0;">Work IQ accionable</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </section>
+
+  <section class="slide" data-screen-label="04 El resultado">
+    <div class="slide__stage">
+      <div class="slide-head"><h2 class="slide-title">FaxiAI</h2><p class="kicker">El resultado</p></div>
+      <div class="stage-body">
+        <div class="cols cols-2">
+          <ul class="checklist">
+            <li><span>3 días a minutos</span></li>
+            <li><span>99% menos de tiempo de ciclo</span></li>
+            <li><span>Inova es Customer Zero</span></li>
+          </ul>
+          <div class="img-frame">Equipo celebrando</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </section>
+
+  <section class="slide" data-screen-label="05 Por qué Microsoft">
+    <div class="slide__stage">
+      <div class="slide-head"><h2 class="slide-title">¿Por qué le importa a Microsoft?</h2></div>
+      <div class="stage-body top" style="flex-direction:column;gap:0;">
+        <p class="center-title">Cuatro razones</p>
+        <div class="card-grid n4">
+          <article class="card"><span class="card__icon"></span><h3 class="card__title">Genera consumo de Azure por usuario y producto</h3></article>
+          <article class="card"><span class="card__icon"></span><h3 class="card__title">Showcase real de lo que Microsoft está empujando</h3></article>
+          <article class="card"><span class="card__icon"></span><h3 class="card__title">Acelera Microsoft 365 porque vuelve accionables</h3></article>
+          <article class="card"><span class="card__icon"></span><h3 class="card__title">Demuestra talento ecuatoriano desde un partner</h3></article>
+        </div>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </section>
+
+  <section class="slide slide--cover" data-screen-label="06 Cierre">
+    <div class="slide__stage">
+      <h2 class="cover-title">FaxiAI gana · FaxiHive entrega</h2>
+      <p class="cover-sub">Muchas gracias por su atención.</p>
+    </div>
+  </section>
+
+  <div class="deck-progress" id="deck-progress" aria-hidden></div>
+  <div class="deck-counter" id="deck-counter">1 / 6</div>
+
+  <script>
+    (function () {
+      var slides=document.querySelectorAll('.slide'),counter=document.getElementById('deck-counter'),
+          progress=document.getElementById('deck-progress'),KEY='od-inova-deck-example-pos',active=0;
+      function C(){return [document.scrollingElement,document.documentElement,document.body].filter(Boolean)
+        .filter(function(el,i,a){return a.indexOf(el)===i;});}
+      function sl(el){if(!el)return 0;try{return Number(el.scrollLeft)||0;}catch(_){return 0;}}
+      function asl(){var c=C(),b=0;for(var i=0;i<c.length;i++){var l=sl(c[i]);if(Math.abs(l)>Math.abs(b))b=l;}return b;}
+      function to(left,beh){var c=C();for(var i=0;i<c.length;i++){try{c[i].scrollLeft=left;}catch(_){}
+        try{c[i].scrollTo({left:left,behavior:beh||'smooth'});}catch(_){}}}
+      function setA(i){active=i;for(var s=0;s<slides.length;s++){slides[s].classList.toggle('active',s===i);slides[s].classList.toggle('is-active',s===i);}
+        if(counter)counter.textContent=(i+1)+' / '+slides.length;if(progress)progress.style.width=(((i+1)/slides.length)*100)+'%';
+        try{localStorage.setItem(KEY,String(i));}catch(_){}}
+      function go(i){var n=Math.max(0,Math.min(slides.length-1,i));setA(n);to(n*window.innerWidth,'smooth');}
+      function sync(){var i=Math.round(asl()/window.innerWidth);if(i!==active&&i>=0&&i<slides.length)setA(i);}
+      function key(e){if(e.defaultPrevented)return;var t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))return;
+        if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(active+1);}
+        else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(active-1);}
+        else if(e.key==='Home'){e.preventDefault();go(0);}else if(e.key==='End'){e.preventDefault();go(slides.length-1);}}
+      window.addEventListener('keydown',key,true);document.addEventListener('keydown',key,true);
+      document.addEventListener('scroll',sync,{passive:true,capture:true});window.addEventListener('scroll',sync,{passive:true});
+      document.body.setAttribute('tabindex','-1');document.body.style.outline='none';
+      function f(){try{window.focus();document.body.focus({preventScroll:true});}catch(_){}}
+      document.addEventListener('mousedown',f);window.addEventListener('load',f);f();
+      try{var s=parseInt(localStorage.getItem(KEY)||'0',10);if(!isNaN(s)&&s>=0&&s<slides.length){setA(s);to(s*window.innerWidth,'instant');}else setA(0);}catch(_){setA(0);}
+    })();
+  </script>
+</body>
+</html>

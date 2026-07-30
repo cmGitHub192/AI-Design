@@ -1254,9 +1254,11 @@ export const HomeHero = forwardRef<HomeHeroHandle, Props>(function HomeHero(
           </p>
         </div>
         <div className="home-hero__decoration" aria-hidden>
-          <span className="home-hero__decoration-card">
-            <span className="home-hero__decoration-glyph od-brand-glyph" />
-          </span>
+          <img
+            className="home-hero__decoration-logo"
+            src="/logo-dise%C3%B1o-disenia.svg"
+            alt=""
+          />
         </div>
       </div>
 

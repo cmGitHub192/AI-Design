@@ -132,6 +132,9 @@ import {
   EntrySettingsMenu,
   type EntrySettingsSection,
 } from './EntrySettingsMenu';
+import { EntryTopSearch } from './EntryTopSearch';
+import { EntryLanguagePicker } from './EntryLanguagePicker';
+import { EntryUserMenu } from './EntryUserMenu';
 import { NewProjectModal } from './NewProjectModal';
 import { PluginsView } from './PluginsView';
 import type { CreateInput, CreateTab, ImportClaudeDesignOutcome } from './NewProjectPanel';
@@ -575,12 +578,23 @@ export function EntryShell({
   useEffect(() => {
     writeStoredRailOpen(railOpen);
   }, [railOpen]);
-  // On a narrow (mobile) viewport start with the labeled sidebar collapsed so it
-  // doesn't cover the content; the hamburger toggle opens it as an overlay.
+  // Responsive rail: below 900px the sidebar overlays the content (fixed) with
+  // a click-to-close backdrop, so it must start collapsed AND re-collapse each
+  // time the viewport crosses into that range — otherwise a desktop→mobile
+  // resize (or rotate) leaves a docked rail covering the whole screen. Driven
+  // by matchMedia so the callback only fires when the breakpoint flips, not on
+  // every resize tick.
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 900) {
-      setRailOpen(false);
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
     }
+    const mq = window.matchMedia('(max-width: 900px)');
+    if (mq.matches) setRailOpen(false);
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setRailOpen(false);
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, []);
   const [localProviderModelsCache, setLocalProviderModelsCache] =
     useState<ProviderModelsCache>({});
@@ -970,7 +984,19 @@ export function EntryShell({
       <div className={`entry${railOpen ? ' entry--rail-open' : ''}`}>
         <EntryNavRail
           view={view}
-          onViewChange={changeView}
+          onViewChange={(next) => {
+            changeView(next);
+            // On the mobile overlay, navigating must dismiss the rail so it
+            // doesn't stay covering the content the user just navigated to.
+            // On desktop the rail stays docked (no-op here).
+            if (
+              typeof window !== 'undefined' &&
+              typeof window.matchMedia === 'function' &&
+              window.matchMedia('(max-width: 900px)').matches
+            ) {
+              setRailOpen(false);
+            }
+          }}
           onNewProject={() => {
             trackHomeNavClick(analytics.track, {
               page_name: 'home',
@@ -1001,42 +1027,29 @@ export function EntryShell({
             >
               <Icon name="menu" size={20} />
             </button>
-            <div className="entry-main__topbar-chips entry-main__topbar-chips--icon-only">
-              {view === 'home' ? null : executionSwitcher}
-              <button
-                type="button"
-                className="use-everywhere-chip od-tooltip"
-                onClick={() => {
-                  trackHomeToolbarClick(analytics.track, {
-                    page_name: 'home',
-                    area: 'toolbar',
-                    element: 'use_everywhere',
-                  });
-                  openIntegrationTab('use-everywhere');
-                }}
-                data-tooltip={t('entry.useEverywhereTitle')}
-                data-tooltip-placement="bottom"
-                aria-label={t('entry.useEverywhereAria')}
-                data-testid="entry-use-everywhere-button"
-              >
-                <span className="use-everywhere-chip__icon" aria-hidden>
-                  <Icon name="hammer" size={13} />
-                </span>
-                <span className="use-everywhere-chip__label">
-                  {t('entry.useEverywhereTitle')}
-                </span>
-              </button>
-            </div>
-            <UpdaterPopup
-              allowSilentUpdates={config.allowSilentUpdates}
-              silentUpdatePreferenceReady={daemonAppConfigReady}
-              onAllowSilentUpdatesChange={
-                onSilentUpdatePreferenceChange
-                  ?? ((allowSilentUpdates) => onConfigPersist({ ...config, allowSilentUpdates }))
-              }
+            <EntryTopSearch
+              projects={projects}
+              placeholder="Buscar proyectos…"
+              onOpenProject={onOpenProject}
+              onSubmitQuery={() => changeView('projects')}
             />
-            <WhatsNewPopup active={view === 'home'} />
-            {avatarMenu}
+            <div className="entry-main__topbar-actions">
+              {view === 'home' ? null : executionSwitcher}
+              <EntryLanguagePicker />
+              <UpdaterPopup
+                allowSilentUpdates={config.allowSilentUpdates}
+                silentUpdatePreferenceReady={daemonAppConfigReady}
+                onAllowSilentUpdatesChange={
+                  onSilentUpdatePreferenceChange
+                    ?? ((allowSilentUpdates) => onConfigPersist({ ...config, allowSilentUpdates }))
+                }
+              />
+              <WhatsNewPopup active={view === 'home'} />
+              <EntryUserMenu
+                userName="Usuario"
+                onOpenSettings={onOpenSettings}
+              />
+            </div>
             {amrBalanceGateBlock ? (
               <AmrBalanceDialog
                 reason={amrBalanceGateBlock.reason}

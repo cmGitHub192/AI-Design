@@ -12,7 +12,6 @@
 .home-view > .home-hero {
   align-self: center;
   width: 100%;
-  max-width: 1040px;
 }
 
 /* Hero — left-aligned heading with a decorative panel, then the composer. */
@@ -22,7 +21,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 20px;
-  padding: 20px 0 4px;
+  padding: 0 0 4px;
   text-align: left;
 }
 /* Two-column heading: greeting/title/subtitle on the left, art on the right. */
@@ -89,27 +88,12 @@
   justify-content: center;
   width: 200px;
   height: 132px;
-  border-radius: 20px;
-  background:
-    radial-gradient(120% 120% at 85% 15%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--bg-panel)), var(--bg-panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-  box-shadow: 0 18px 40px -26px color-mix(in srgb, var(--accent) 70%, transparent);
-  overflow: hidden;
 }
-.home-hero__decoration-card {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  background: var(--bg-panel);
-  box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.home-hero__decoration-glyph {
-  width: 34px;
-  height: 34px;
+/* Brand logo art (public/logo-diseño-disenia.svg), sized to fit the slot. */
+.home-hero__decoration-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 @media (max-width: 860px) {
   .home-hero__decoration {
@@ -1308,11 +1292,6 @@
 .home-hero__workdir-row {
   width: 100%;
   max-width: 720px;
-  /* Sit a little below the input card. The parent `.home-hero` flex column
-     adds a 14px gap; we trim ~4px of it so the pickers (and their hover fill)
-     keep a clear ~10px of breathing room below the card instead of colliding
-     with its bottom border. */
-  margin: -4px auto 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;

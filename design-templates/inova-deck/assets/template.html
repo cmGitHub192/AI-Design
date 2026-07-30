@@ -1,0 +1,365 @@
+<!doctype html>
+<!--
+  Inova Solutions deck seed.
+
+  Single-file horizontal-swipe HTML deck in the Inova house style. Each
+  `<section class="slide">` is one slide and carries the corporate triangle
+  background (assets/background.png, copied to the project root as
+  background.png). The `.slide__stage` wrapper insets content so it never
+  collides with the top-left logo or the corner triangles.
+
+  Brand tokens live in :root — they are already the Inova palette. Only change
+  them if the user explicitly asks. Paste real slide layouts from
+  references/layouts.md between the marker comments in <body>.
+
+  DO NOT rewrite the <script> at the bottom — it solves the iframe navigation
+  bugs (real scroller detection, capture-phase listeners, auto-focus, no
+  scrollIntoView, position persistence) and keeps `.slide.active` in sync for
+  the host slide counter.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[REPLACE] Título del deck · Inova Solutions</title>
+  <style>
+    :root {
+      /* ── Inova brand palette ─────────────────────────────────────── */
+      --brand-navy:  #1f3a63;   /* titles, check bullets, deep frame */
+      --brand-blue:  #2e75b6;   /* cards, arrows, secondary accent   */
+      --brand-cyan:  #29abe2;   /* image frames, highlights          */
+      --brand-green: #8dc63f;   /* kickers / sub-headers             */
+
+      --bg:      #ffffff;
+      --surface: #ffffff;
+      --fg:      #1f2937;
+      --muted:   #5b6472;
+      --border:  #e4e8ef;
+      --card-fg: #ffffff;
+
+      /* Project-relative background. The skill copies assets/background.png
+         to the project root as background.png. Falls back to white if absent. */
+      --brand-bg: url('background.png');
+
+      --font-display: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      --font-body:    'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      --font-mono:    ui-monospace, 'Segoe UI Mono', 'SF Mono', Menlo, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 18px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+    }
+    body::-webkit-scrollbar { display: none; }
+    p { text-wrap: pretty; }
+    h1, h2, h3 { text-wrap: balance; }
+
+    /* ─── slide surface: full-bleed Inova background frame ──────────── */
+    .slide {
+      flex: 0 0 100vw;
+      width: 100vw;
+      height: 100vh;
+      scroll-snap-align: start;
+      position: relative;
+      overflow: hidden;
+      background-color: var(--bg);
+      background-image: var(--brand-bg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+    }
+
+    /* content stage — insets away from the logo (top-left) + corner triangles */
+    .slide__stage {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      padding: clamp(40px, 6vh, 72px) clamp(64px, 8vw, 128px) clamp(56px, 8vh, 92px);
+      display: flex;
+      flex-direction: column;
+    }
+    /* cover / closing variant — centered, roomy */
+    .slide--cover .slide__stage {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    /* ─── section header (kicker under a navy title, cleared from logo) ─ */
+    .slide-head { margin-left: clamp(150px, 15vw, 240px); margin-bottom: clamp(20px, 4vh, 44px); }
+    .slide-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      color: var(--brand-navy);
+      font-size: clamp(34px, 4.4vw, 60px);
+      line-height: 1.02;
+      margin: 0;
+    }
+    .kicker {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--brand-green);
+      font-size: clamp(16px, 1.7vw, 24px);
+      letter-spacing: 0.01em;
+      margin: 8px 0 0;
+    }
+    .kicker.blue { color: var(--brand-blue); }
+
+    /* ─── cover / closing type ──────────────────────────────────────── */
+    .cover-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--brand-navy);
+      font-size: clamp(52px, 8vw, 108px);
+      line-height: 1.0;
+      letter-spacing: -0.01em;
+      margin: 0 0 18px;
+      max-width: 18ch;
+    }
+    .cover-sub {
+      font-style: italic;
+      color: var(--fg);
+      font-size: clamp(20px, 2.4vw, 34px);
+      margin: 0;
+      max-width: 40ch;
+    }
+
+    /* ─── body area (fills the white center) ───────────────────────── */
+    .stage-body { flex: 1 1 auto; display: flex; align-items: center; min-height: 0; }
+    .stage-body.top { align-items: flex-start; }
+
+    .lead {
+      font-size: clamp(18px, 1.5vw, 24px);
+      line-height: 1.55;
+      color: var(--fg);
+      max-width: 30ch;
+      margin: 0;
+    }
+    .muted { color: var(--muted); }
+
+    /* ─── two / three column ────────────────────────────────────────── */
+    .cols { display: grid; gap: clamp(24px, 3vw, 56px); width: 100%; align-items: center; }
+    .cols-2  { grid-template-columns: 1fr 1fr; }
+    .cols-3  { grid-template-columns: repeat(3, 1fr); }
+    .cols-121 { grid-template-columns: 1fr 1.2fr 1fr; }
+    .col-title {
+      font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+      color: var(--brand-blue); font-size: clamp(22px, 2.2vw, 32px); line-height: 1.1; margin: 0 0 14px;
+    }
+    .col-text { color: var(--fg); font-size: clamp(16px, 1.3vw, 20px); line-height: 1.5; margin: 0; }
+
+    /* ─── checklist (navy circle + white check) ─────────────────────── */
+    .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(14px, 2.2vh, 26px); }
+    .checklist li { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
+    .checklist li::before {
+      content: "";
+      width: 30px; height: 30px; margin-top: 2px;
+      border-radius: 999px;
+      background: var(--brand-navy)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E")
+        center / 16px no-repeat;
+      flex: 0 0 auto;
+    }
+    .checklist li span { font-size: clamp(17px, 1.4vw, 22px); line-height: 1.4; color: var(--fg); }
+
+    /* ─── image slot (cyan rounded frame, like the corporate photos) ── */
+    .img-frame {
+      border: 4px solid var(--brand-cyan);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #eef3f8;
+      aspect-ratio: 4 / 3;
+      display: grid; place-items: center;
+      color: var(--muted); font-size: 13px;
+    }
+    .img-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .img-frame.round { border-radius: 999px; aspect-ratio: 1; }
+
+    /* ─── blue rounded cards (page 9 / 12 style) ────────────────────── */
+    .card-grid { display: grid; gap: clamp(18px, 2vw, 32px); width: 100%; }
+    .card-grid.n3 { grid-template-columns: repeat(3, 1fr); }
+    .card-grid.n4 { grid-template-columns: repeat(4, 1fr); }
+    .card {
+      background: var(--brand-blue);
+      color: var(--card-fg);
+      border-radius: 16px;
+      padding: clamp(20px, 2vw, 30px);
+      padding-top: clamp(44px, 5vh, 64px);
+      position: relative;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .card__icon {
+      position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%);
+      width: clamp(56px, 6vw, 84px); height: clamp(56px, 6vw, 84px);
+      border-radius: 999px; background: #fff; border: 3px solid var(--brand-cyan);
+      display: grid; place-items: center; overflow: hidden;
+    }
+    .card__icon img { width: 100%; height: 100%; object-fit: cover; }
+    .card__title { font-weight: 800; text-transform: uppercase; font-size: clamp(15px, 1.2vw, 19px); line-height: 1.15; margin: 0; }
+    .card__text  { font-size: clamp(13px, 1vw, 16px); line-height: 1.45; margin: 0; opacity: 0.95; }
+
+    .center-title {
+      font-family: var(--font-display); font-weight: 800; color: var(--brand-navy);
+      font-size: clamp(28px, 3.4vw, 46px); text-align: center; margin: 0 0 clamp(24px, 4vh, 48px);
+    }
+
+    /* ─── footer url (content slides) ───────────────────────────────── */
+    .footer-url {
+      position: absolute; right: clamp(24px, 4vw, 56px); bottom: clamp(18px, 3vh, 30px);
+      font-size: 13px; color: var(--brand-green); z-index: 2; letter-spacing: 0.01em;
+    }
+
+    /* ─── deck chrome (never scrolls) ───────────────────────────────── */
+    .deck-progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--brand-green); width: 0; z-index: 20; transition: width 0.18s ease; }
+    .deck-counter  { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+      font-family: var(--font-mono); font-size: 12px; color: var(--brand-navy);
+      background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 999px;
+      border: 1px solid var(--border); letter-spacing: 0.04em; z-index: 20; }
+  </style>
+</head>
+<body>
+  <!--
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  PASTE SLIDES FROM references/layouts.md HERE.                     │
+    │  ► Every slide: <section class="slide" ...><div class="slide__stage">│
+    │  ► Cover / closing: add the `slide--cover` modifier.               │
+    │  ► data-screen-label="01 Cover", "02 …" in order.                  │
+    └──────────────────────────────────────────────────────────────────┘
+  -->
+
+  <!-- 01 · Cover -->
+  <section class="slide slide--cover" data-screen-label="01 Cover">
+    <div class="slide__stage">
+      <h1 class="cover-title">[REPLACE] Título de portada</h1>
+      <p class="cover-sub">[REPLACE] Subtítulo en cursiva.</p>
+    </div>
+  </section>
+
+  <!-- 02 · Section + lead -->
+  <section class="slide" data-screen-label="02 Sección">
+    <div class="slide__stage">
+      <div class="slide-head">
+        <h2 class="slide-title">[REPLACE] Título de sección</h2>
+        <p class="kicker">[REPLACE] Subtítulo verde</p>
+      </div>
+      <div class="stage-body">
+        <p class="lead">[REPLACE] Una o dos frases, concretas.</p>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </section>
+
+  <!-- 03 · Closing -->
+  <section class="slide slide--cover" data-screen-label="03 Cierre">
+    <div class="slide__stage">
+      <h2 class="cover-title">[REPLACE] Mensaje de cierre</h2>
+      <p class="cover-sub">[REPLACE] Muchas gracias por su atención.</p>
+    </div>
+  </section>
+
+  <!-- chrome -->
+  <div class="deck-progress" id="deck-progress" aria-hidden></div>
+  <div class="deck-counter"  id="deck-counter">1 / 3</div>
+
+  <script>
+    /*
+      Iframe-safe deck navigation (the OD preview is an iframe).
+      1. Detect the real scroller (body OR documentElement).
+      2. keydown + scroll listeners on BOTH window and document, capture phase.
+      3. Auto-focus so arrow keys work without a click.
+      4. Never Element.scrollIntoView — it yanks the host page.
+      5. Persist position; keep `.slide.active` in sync for the host counter.
+    */
+    (function () {
+      var slides   = document.querySelectorAll('.slide');
+      var counter  = document.getElementById('deck-counter');
+      var progress = document.getElementById('deck-progress');
+      var KEY      = 'od-inova-deck-pos';
+      var active   = 0;
+
+      function scrollContainers() {
+        return [document.scrollingElement, document.documentElement, document.body]
+          .filter(Boolean)
+          .filter(function (el, idx, arr) { return arr.indexOf(el) === idx; });
+      }
+      function overflowX(el) { return el ? Math.max(0, (el.scrollWidth || 0) - (el.clientWidth || 0)) : 0; }
+      function scrollLeftOf(el) { if (!el) return 0; try { return Number(el.scrollLeft) || 0; } catch (_) { return 0; } }
+      function activeScrollLeft() {
+        var c = scrollContainers(), best = 0;
+        for (var i = 0; i < c.length; i++) { var l = scrollLeftOf(c[i]); if (Math.abs(l) > Math.abs(best)) best = l; }
+        return best;
+      }
+      function scrollToLeft(left, behavior) {
+        var c = scrollContainers();
+        for (var i = 0; i < c.length; i++) {
+          try { c[i].scrollLeft = left; } catch (_) {}
+          try { c[i].scrollTo({ left: left, behavior: behavior || 'smooth' }); } catch (_) {}
+        }
+      }
+      function setActive(i) {
+        active = i;
+        for (var s = 0; s < slides.length; s++) {
+          if (s === i) { slides[s].classList.add('active', 'is-active'); }
+          else { slides[s].classList.remove('active', 'is-active'); }
+        }
+        if (counter)  counter.textContent  = (i + 1) + ' / ' + slides.length;
+        if (progress) progress.style.width = (((i + 1) / slides.length) * 100) + '%';
+        try { localStorage.setItem(KEY, String(i)); } catch (_) {}
+      }
+      function go(i) {
+        var next = Math.max(0, Math.min(slides.length - 1, i));
+        setActive(next);
+        scrollToLeft(next * window.innerWidth, 'smooth');
+      }
+      function syncFromScroll() {
+        var i = Math.round(activeScrollLeft() / window.innerWidth);
+        if (i !== active && i >= 0 && i < slides.length) setActive(i);
+      }
+      function onKey(e) {
+        if (e.defaultPrevented) return;
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if      (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(active + 1); }
+        else if (e.key === 'ArrowLeft'  || e.key === 'PageUp')                     { e.preventDefault(); go(active - 1); }
+        else if (e.key === 'Home')                                                 { e.preventDefault(); go(0); }
+        else if (e.key === 'End')                                                  { e.preventDefault(); go(slides.length - 1); }
+      }
+
+      window.addEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      document.addEventListener('scroll', syncFromScroll, { passive: true, capture: true });
+      window.addEventListener('scroll', syncFromScroll, { passive: true });
+
+      document.body.setAttribute('tabindex', '-1');
+      document.body.style.outline = 'none';
+      function focusDeck() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (_) {} }
+      document.addEventListener('mousedown', focusDeck);
+      window.addEventListener('load', focusDeck);
+      focusDeck();
+
+      try {
+        var saved = parseInt(localStorage.getItem(KEY) || '0', 10);
+        if (!isNaN(saved) && saved >= 0 && saved < slides.length) { setActive(saved); scrollToLeft(saved * window.innerWidth, 'instant'); }
+        else { setActive(0); }
+      } catch (_) { setActive(0); }
+    })();
+  </script>
+</body>
+</html>

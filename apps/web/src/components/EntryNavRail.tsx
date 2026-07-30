@@ -39,14 +39,6 @@ interface Props {
   onSignOut?: () => void;
 }
 
-function initialsFrom(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  const first = parts[0]![0] ?? '';
-  const last = parts.length > 1 ? parts[parts.length - 1]![0] ?? '' : '';
-  return `${first}${last}`.toUpperCase();
-}
-
 interface NavButtonProps {
   active?: boolean;
   ariaLabel: string;
@@ -72,6 +64,7 @@ function NavButton({ active, ariaLabel, tooltip, onClick, disabled, testId, chil
     >
       <span className="entry-nav-rail__btn-icon" aria-hidden="true">{children}</span>
       <span className="entry-nav-rail__btn-label">{tooltip}</span>
+      {active ? <span className="entry-nav-rail__btn-dot" aria-hidden="true" /> : null}
     </button>
   );
 }
@@ -82,10 +75,6 @@ export function EntryNavRail({
   onNewProject,
   newProjectDisabled = false,
   open,
-  onClose,
-  userName = 'Usuario',
-  userAvatarUrl,
-  onSignOut,
 }: Props) {
   const t = useT();
   const brandLabel = t('app.brand');
@@ -135,30 +124,32 @@ export function EntryNavRail({
               className="entry-nav-rail__logo-img od-brand-glyph"
               aria-hidden="true"
             />
-            <span className="entry-nav-rail__logo-name">{brandLabel}</span>
-          </button>
-          <button
-            type="button"
-            className="entry-nav-rail__collapse"
-            onClick={onClose}
-            aria-label={t('entry.navCollapse')}
-            title={t('entry.navCollapse')}
-            data-testid="entry-nav-collapse"
-          >
-            <Icon name="panel-left" size={20} />
+            <span className="entry-nav-rail__logo-name">
+              {brandLabel.endsWith('ia') ? brandLabel.slice(0, -2) : brandLabel}
+              {brandLabel.endsWith('ia') ? (
+                <span className="entry-nav-rail__logo-name-accent">ia</span>
+              ) : null}
+            </span>
           </button>
         </div>
         <div className="entry-nav-rail__logo-divider" role="separator" aria-hidden="true" />
-        <NavButton
-          ariaLabel={t('entry.navNewProject')}
-          tooltip={t('entry.navNewProject')}
+        <button
+          type="button"
+          className="entry-nav-rail__cta"
           onClick={onNewProject}
           disabled={newProjectDisabled}
-          testId="entry-nav-new-project"
-          variant="primary"
+          aria-label={t('entry.navNewProject')}
+          data-testid="entry-nav-new-project"
         >
-          <Icon name="plus" size={18} />
-        </NavButton>
+          <span className="entry-nav-rail__cta-icon" aria-hidden="true">
+            <Icon name="plus" size={18} />
+          </span>
+          <span className="entry-nav-rail__cta-title">{t('entry.navNewProject')}</span>
+          <span className="entry-nav-rail__cta-chevron" aria-hidden="true">
+            <Icon name="chevron-right" size={16} />
+          </span>
+        </button>
+        <div className="entry-nav-rail__section" role="presentation">General</div>
         <NavButton
           active={isHome}
           ariaLabel={homeLabel}
@@ -197,6 +188,7 @@ export function EntryNavRail({
             <Icon name="layers-filled" size={18} />
           </NavButton>
         ) : null}
+        <div className="entry-nav-rail__section" role="presentation">Gestión</div>
         <NavButton
           active={view === 'tasks'}
           ariaLabel={t('entry.navTasks')}
@@ -224,37 +216,6 @@ export function EntryNavRail({
         >
           <Icon name="link" size={18} />
         </NavButton>
-      </div>
-      <div className="entry-nav-rail__footer">
-        <div className="entry-nav-rail__user">
-          {userAvatarUrl ? (
-            <img
-              className="entry-nav-rail__avatar"
-              src={userAvatarUrl}
-              alt=""
-              aria-hidden="true"
-            />
-          ) : (
-            <span
-              className="entry-nav-rail__avatar entry-nav-rail__avatar--initials"
-              aria-hidden="true"
-            >
-              {initialsFrom(userName)}
-            </span>
-          )}
-          <span className="entry-nav-rail__user-name">{userName}</span>
-        </div>
-        <button
-          type="button"
-          className="entry-nav-rail__btn entry-nav-rail__signout"
-          onClick={() => onSignOut?.()}
-          data-testid="entry-nav-signout"
-        >
-          <span className="entry-nav-rail__btn-icon" aria-hidden="true">
-            <Icon name="log-out" size={18} />
-          </span>
-          <span className="entry-nav-rail__btn-label">{t('settings.amrLogout')}</span>
-        </button>
       </div>
     </nav>
   );

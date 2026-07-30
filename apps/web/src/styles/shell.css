@@ -25,11 +25,15 @@
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 36px minmax(0, 1fr);
+  /* The top workspace-tabs header is hidden (see shell.css), so its grid row
+     collapses to 0 and the body is pinned to row 2 — otherwise the body would
+     auto-place into the (now empty) first row and squash the whole app. */
+  grid-template-rows: 0 minmax(0, 1fr);
   background: var(--bg-app);
   overflow: hidden;
 }
 .workspace-shell__body {
+  grid-row: 2;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -49,6 +53,8 @@
 }
 
 .workspace-tabs-chrome.app-chrome-header {
+  /* Redesign: hide the top workspace-tabs strip for a cleaner shell. */
+  display: none;
   min-width: 0;
   max-width: 100%;
   min-height: 38px;

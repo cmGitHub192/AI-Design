@@ -59,7 +59,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--bg-panel);
-  padding: 2px;
+  padding: 5px;
   gap: 2px;
 }
 .plugins-home__sort-segment {
@@ -279,7 +279,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px 12px;
-  padding: 4px 0;
+  padding: 10px 0;
 }
 /* Right-aligned cluster paired with the chip strip on the same row.
    Hosts the search input, the filtered-count, and a clear-filters

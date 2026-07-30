@@ -936,7 +936,9 @@
 /* Project page audit pass: one final rule set for the active project shell.
    Keep the outer panes flat; only controls and repeated items get radius. */
 .workspace-shell {
-  grid-template-rows: 34px minmax(0, 1fr);
+  /* The top workspace-tabs header is hidden, so its grid row collapses to 0
+     (otherwise it leaves an empty strip above the app). */
+  grid-template-rows: 0 minmax(0, 1fr);
 }
 .workspace-shell .workspace-tabs-chrome.app-chrome-header {
   --workspace-tabs-chrome-height: 34px;
