@@ -1330,32 +1330,141 @@ export async function exportAsPdf(
 
   const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
+  printViaHiddenIframe(url);
+}
 
-  // Open an empty tab synchronously (without noopener) to reliably detect popup blocking.
-  // Since window.open with 'noopener' returns null on success by specification,
-  // this approach allows us to distinguish between a successful export and a blocked popup.
-  const win = window.open('', '_blank');
+// Dizenia's server-side HTML→PDF: asks our own daemon endpoint to render the
+// deck with the system browser (Edge/Chrome headless --print-to-pdf) and
+// downloads the finished file — one click, no print dialog, no pop-up. Returns
+// 'unavailable' when the daemon has no browser to render with (HTTP 501) so the
+// caller can fall back to the client-side print path.
+export async function exportProjectDeckPdf(opts: {
+  projectId: string;
+  fileName: string;
+  title?: string;
+  deck?: boolean;
+  versionId?: string;
+}): Promise<'ok' | 'unavailable'> {
+  const resp = await fetch(`/api/projects/${encodeURIComponent(opts.projectId)}/deck-pdf`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      fileName: opts.fileName,
+      ...(opts.title ? { title: opts.title } : {}),
+      ...(typeof opts.deck === 'boolean' ? { deck: opts.deck } : {}),
+      ...(opts.versionId ? { versionId: opts.versionId } : {}),
+    }),
+  });
+  if (resp.status === 501) return 'unavailable';
+  if (!resp.ok) throw new Error(`deck PDF export failed (${resp.status})`);
+  const blob = await resp.blob();
+  const base = opts.fileName.replace(/^.*\//, '').replace(/\.html?$/i, '');
+  const slug = safeFilename(opts.title || base, 'deck');
+  const fromHeader = filenameFromContentDisposition(resp);
+  triggerDownload(blob, fromHeader || `${slug}.pdf`);
+  return 'ok';
+}
 
-  if (!win) {
-    if (typeof alert !== 'undefined') {
-      alert('Popup blocked! Click the popup-blocked icon in your browser address bar (or browser menu), choose "Always allow pop-ups" for this site, then retry Export PDF.');
+// Dizenia's server-side HTML→PPTX: asks our daemon endpoint to screenshot each
+// slide with the system browser and assemble an image-per-slide .pptx, then
+// downloads it. Returns 'unavailable' on HTTP 501 (no browser on the daemon
+// host) so the caller can fall back to the desktop/screenshot path.
+export async function exportProjectDeckPptx(opts: {
+  projectId: string;
+  fileName: string;
+  title?: string;
+  versionId?: string;
+}): Promise<'ok' | 'unavailable'> {
+  const resp = await fetch(`/api/projects/${encodeURIComponent(opts.projectId)}/deck-pptx`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      fileName: opts.fileName,
+      ...(opts.title ? { title: opts.title } : {}),
+      ...(opts.versionId ? { versionId: opts.versionId } : {}),
+    }),
+  });
+  if (resp.status === 501) return 'unavailable';
+  if (!resp.ok) throw new Error(`deck PPTX export failed (${resp.status})`);
+  const blob = await resp.blob();
+  const base = opts.fileName.replace(/^.*\//, '').replace(/\.html?$/i, '');
+  const slug = safeFilename(opts.title || base, 'deck');
+  const fromHeader = filenameFromContentDisposition(resp);
+  triggerDownload(blob, fromHeader || `${slug}.pptx`);
+  return 'ok';
+}
+
+// Load a print-ready document into an off-screen iframe and let its injected
+// script self-print. Replaces the old window.open() popup, which the browser
+// blocked because it ran after an await (the user gesture was already spent).
+// An iframe needs no gesture, so this works in every browser with no pop-up
+// permission. Off-screen but real-sized: a 0×0 frame can lay out to nothing and
+// print blank.
+function printViaHiddenIframe(url: string): void {
+  const frame = document.createElement('iframe');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.setAttribute('tabindex', '-1');
+  frame.style.cssText =
+    'position:fixed;left:-10000px;top:0;width:100vw;height:100vh;border:0;opacity:0;pointer-events:none;';
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    try {
+      frame.remove();
+    } catch {
+      /* already detached */
     }
     URL.revokeObjectURL(url);
-    return;
-  }
+  };
 
-  if (sandboxedPreview) {
+  frame.addEventListener('load', () => {
+    // The wrapper document is same-origin (a blob inherits this page's origin),
+    // so we can hook afterprint to tear the frame down once the print/save
+    // dialog closes. A hard backstop below still fires if the event never does.
     try {
-      win.opener = null;
-    } catch (e) {
-      // Guard against potential context environment restrictions
+      const fwin = frame.contentWindow;
+      fwin?.addEventListener('afterprint', () => setTimeout(cleanup, 500), { once: true });
+    } catch {
+      /* defensive: rely on the backstop timeout */
     }
-  }
+  });
 
-  // Navigate the verified window to the generated Blob URL then release
-  // the Blob URL after the tab has had time to start loading it.
-  win.location.href = url;
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  frame.src = url;
+  document.body.appendChild(frame);
+  setTimeout(cleanup, 120_000);
+}
+
+// ---------------------------------------------------------------------------
+// Dizenia's own PDF export — fully decoupled from Open Design's export
+// endpoints and the Electron desktop renderer.
+//
+// Renders the artifact straight through the BROWSER's own print engine in a
+// hidden iframe: pixel-perfect (real fonts, backgrounds, the exact deck), no
+// pop-up, no /api/export/* round-trip, no jsPDF raster step. The user picks
+// "Save as PDF" in the print dialog. For decks, injectDeckPrintStylesheet lays
+// one slide per 1920×1080 page and forces backgrounds on (print-color-adjust)
+// so the frame prints without toggling the dialog's "Background graphics".
+// ---------------------------------------------------------------------------
+export async function printArtifactPdf(
+  html: string,
+  title: string,
+  opts?: { deck?: boolean; sandboxedPreview?: boolean },
+): Promise<void> {
+  const sandboxedPreview = opts?.sandboxedPreview ?? true;
+  const nonce = randomUUID();
+  let doc = buildBlobSafeSrcdoc(html);
+  if (opts?.deck) doc = injectDeckPrintStylesheet(doc);
+  doc = injectPrintReadyHandshake(doc, nonce);
+  if (sandboxedPreview) {
+    doc = buildSandboxedPreviewDocument(doc, title, { allowModals: true });
+  }
+  doc = injectParentPrintReadyCache(doc, nonce);
+  doc = injectPrintScript(doc, title);
+  const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  printViaHiddenIframe(url);
 }
 
 /**
@@ -1488,6 +1597,11 @@ const DECK_PRINT_CSS = `
     height: auto !important;
     overflow: visible !important;
     background: #fff !important;
+    /* Force backgrounds/colors to print so the deck's frame + fills survive
+       even when the user hasn't ticked the print dialog's "Background
+       graphics" option (inherited by every slide). */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   body {
     display: block !important;
@@ -1513,6 +1627,15 @@ const DECK_PRINT_CSS = `
     visibility: visible !important;
     animation: none !important;
     transition: none !important;
+  }
+  /* Modern deck frameworks hide inactive slides with
+     .slide:not(.active){display:none!important} (specificity 0,2,0), which the
+     block above (0,1,0) cannot beat even with !important — so only the ACTIVE
+     slide printed and the PDF collapsed to one page. Re-show every slide with a
+     matching-specificity, later-source rule so all slides paginate. */
+  .slide:not(.active), section.slide:not(.active),
+  [data-screen-label]:not(.active), .deck-slide:not(.active), .ppt-slide:not(.active) {
+    display: flex !important;
   }
   .slide:last-child, [data-screen-label]:last-child { page-break-after: auto; break-after: auto; }
   .deck-counter, .deck-hint, .deck-nav,

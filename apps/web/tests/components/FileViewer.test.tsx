@@ -3872,7 +3872,10 @@ describe('FileViewer SVG artifacts', () => {
     );
   });
 
-  it('does not show an export-started toast when desktop PDF export is canceled', async () => {
+  it('exports PDF through the decoupled client print path, not the /api/export/pdf endpoint', async () => {
+    // Dizenia's PDF export is fully client-side (browser print engine) and no
+    // longer round-trips through Open Design's /api/export/* renderer, so a web
+    // PDF export must never hit that endpoint.
     const file = baseFile({
       name: 'index.html',
       path: 'index.html',
@@ -3887,19 +3890,9 @@ describe('FileViewer SVG artifacts', () => {
         exports: ['html'],
       },
     });
-    const fetchMock = vi.fn(async (input: unknown) => {
-      const url = typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.pathname
-          : typeof (input as { url?: unknown })?.url === 'string'
-            ? (input as { url: string }).url
-            : '';
-      if (url === '/api/projects/project-1/export/pdf') {
-        return new Response(JSON.stringify({ ok: true, canceled: true }), { status: 200 });
-      }
-      return new Response(JSON.stringify({ deployments: [] }), { status: 200 });
-    });
+    const fetchMock = vi.fn(async (_input: unknown) =>
+      new Response(JSON.stringify({ deployments: [] }), { status: 200 }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     render(
@@ -3911,17 +3904,21 @@ describe('FileViewer SVG artifacts', () => {
     fireEvent.click(screen.getByRole('button', { name: /download/i }));
     fireEvent.click(await screen.findByRole('menuitem', { name: /Export as PDF/i }));
 
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/projects/project-1/export/pdf',
-        expect.objectContaining({ method: 'POST' }),
-      );
-    });
     await act(async () => {
       await Promise.resolve();
     });
 
-    expect(screen.queryByText('Export started')).toBeNull();
+    const hitPdfEndpoint = fetchMock.mock.calls.some(([input]) => {
+      const url = typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.pathname
+          : typeof (input as { url?: unknown })?.url === 'string'
+            ? (input as { url: string }).url
+            : '';
+      return url.includes('/export/pdf');
+    });
+    expect(hitPdfEndpoint).toBe(false);
   });
 
   it('disables share link actions while the artifact is still streaming', async () => {

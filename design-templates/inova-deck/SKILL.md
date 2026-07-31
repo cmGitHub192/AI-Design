@@ -43,94 +43,292 @@ od:
 
 # Inova Solutions Deck Skill
 
-Produce a single-file horizontal-swipe HTML deck in the **Inova Solutions**
-house style: the corporate triangle-frame background on every slide, navy
-titles, green kickers, blue rounded cards, and navy check bullets — the look of
-the FaxiAI / FaxiHive decks.
+Produce a single-file Inova-branded HTML deck. This template is built **on top of
+the official OD deck framework** (fixed 1920×1080 canvas, scale-to-fit,
+`.slide.active` visibility, framework chrome + script). The host preview REQUIRES
+that framework — a `100vw/100vh` scroll deck renders **blank** in the app preview.
 
-## Resource map
+## THE ONE RULE
 
+**Copy the full skeleton below VERBATIM into your deck HTML file** (e.g.
+`inova-deck.html`). It contains, unchanged:
+- the framework's first `<style>` block (`.deck-shell` / `.deck-stage` / `.slide`
+  / `.deck-counter` / `.deck-hint` + `@media print`),
+- the framework chrome (`<nav class="deck-counter">` with `#deck-prev`,
+  `#deck-cur`, `#deck-total`, `#deck-next`) and the trailing `<script>`
+  (scale-to-fit + navigation).
+
+You edit ONLY:
+1. the `<title>`,
+2. the `:root` tokens are already the Inova palette — leave them,
+3. the `<section class="slide">` blocks inside `#deck-stage`.
+
+**Do NOT** rewrite `.deck-shell` / `.deck-stage` / `.slide` / the counter / the
+`@media print` block / the `<script>`. **Do NOT** use `100vw` / `100vh` or a
+scroll model. Sizes inside slides are **fixed px** for the 1920×1080 canvas
+(never `vw`/`vh`).
+
+## Brand background — inline SVG, never an external file
+
+The `--brand-bg` token already holds the Inova triangle frame + navy "Inova"
+logo as an inline SVG. It renders in the sandboxed preview AND in a downloaded
+file. **Never reference external image files** (`<img src="foo.png">`,
+`url('bar.jpg')`) — the sandbox can't fetch them and they render broken. For
+photo slots leave the `.img-frame` empty or put a short caption inside it; only
+inline SVG / `data:` URIs are allowed.
+
+Every slide carries the frame via `class="slide s-frame"`. The logo sits top-left,
+so titles use `.slide-head` (already indented past it).
+
+`assets/template.html` and `references/layouts.md` mirror this content for
+humans — but generate from the inline copy below, not by reading files.
+
+## Build steps
+
+1. Copy the skeleton below to a semantically named file.
+2. Plan the slide order (cover → content → closing). Show the plan first.
+3. First slide is `<section class="slide active s-frame">`; the rest
+   `<section class="slide s-frame">` (no `active`). The script auto-counts them.
+4. Fill each slide from the layouts. Real copy only — no lorem, no invented numbers.
+5. `data-screen-label="01 Cover"`, `"02 …"` on every slide, in order.
+6. Write the file; send one short summary. Do not paste the HTML in chat.
+
+## Full skeleton — copy verbatim, add `<section class="slide">` blocks
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[REPLACE] Título del deck · Inova Solutions</title>
+  <style>
+    :root {
+      --bg:#ffffff; --fg:#1f2937; --muted:#5b6472; --accent:#2e75b6; --surface:#ffffff; --shell:#eceff3;
+      --brand-navy:#1f3a63; --brand-blue:#2e75b6; --brand-cyan:#29abe2; --brand-green:#8dc63f; --border:#e4e8ef;
+      --brand-bg: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201920%201080%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Crect%20width%3D%221920%22%20height%3D%221080%22%20fill%3D%22%23ffffff%22%2F%3E%3Cpolygon%20points%3D%221560%2C60%201620%2C60%201590%2C0%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221620%2C0%201680%2C0%201650%2C60%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%221680%2C60%201740%2C60%201710%2C0%22%20fill%3D%22%23e7edf3%22%2F%3E%3Cpolygon%20points%3D%221740%2C0%201800%2C0%201770%2C60%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221800%2C60%201860%2C60%201830%2C0%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221860%2C0%201920%2C0%201890%2C60%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221590%2C60%201650%2C60%201620%2C120%22%20fill%3D%22%231b75bb%22%2F%3E%3Cpolygon%20points%3D%221650%2C120%201710%2C120%201680%2C60%22%20fill%3D%22%23f0f3f7%22%2F%3E%3Cpolygon%20points%3D%221710%2C60%201770%2C60%201740%2C120%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221770%2C120%201830%2C120%201800%2C60%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%221830%2C60%201890%2C60%201860%2C120%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221890%2C120%201950%2C120%201920%2C60%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221680%2C180%201740%2C180%201710%2C120%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221740%2C120%201800%2C120%201770%2C180%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%221800%2C180%201860%2C180%201830%2C120%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221860%2C120%201920%2C120%201890%2C180%22%20fill%3D%22%23e7edf3%22%2F%3E%3Cpolygon%20points%3D%221770%2C180%201830%2C180%201800%2C240%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221830%2C240%201890%2C240%201860%2C180%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221890%2C180%201950%2C180%201920%2C240%22%20fill%3D%22%23f0f3f7%22%2F%3E%3Cpolygon%20points%3D%220%2C960%2060%2C960%2030%2C900%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%2260%2C900%20120%2C900%2090%2C960%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%22120%2C960%20180%2C960%20150%2C900%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%22180%2C900%20240%2C900%20210%2C960%22%20fill%3D%22%23e7edf3%22%2F%3E%3Cpolygon%20points%3D%2230%2C960%2090%2C960%2060%2C1020%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%2290%2C1020%20150%2C1020%20120%2C960%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%22150%2C960%20210%2C960%20180%2C1020%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%22210%2C1020%20270%2C1020%20240%2C960%22%20fill%3D%22%23f0f3f7%22%2F%3E%3Cpolygon%20points%3D%220%2C1080%2060%2C1080%2030%2C1020%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%2260%2C1020%20120%2C1020%2090%2C1080%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%22120%2C1080%20180%2C1080%20150%2C1020%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%22180%2C1020%20240%2C1020%20210%2C1080%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221800%2C1080%201860%2C1080%201830%2C1020%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221860%2C1020%201920%2C1020%201890%2C1080%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221830%2C960%201890%2C960%201860%2C1020%22%20fill%3D%22%23e7edf3%22%2F%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22250%22%20height%3D%22188%22%20fill%3D%22%231f3a63%22%2F%3E%3Ctext%20x%3D%2226%22%20y%3D%22118%22%20font-family%3D%22Segoe%20UI%2CArial%2Csans-serif%22%20font-size%3D%2264%22%20font-weight%3D%22800%22%20font-style%3D%22italic%22%20fill%3D%22%23ffffff%22%3EInova%3C%2Ftext%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%2266%22%20r%3D%2212%22%20fill%3D%22%238dc63f%22%2F%3E%3Ctext%20x%3D%22120%22%20y%3D%22150%22%20font-family%3D%22Segoe%20UI%2CArial%2Csans-serif%22%20font-size%3D%2221%22%20font-weight%3D%22700%22%20letter-spacing%3D%224%22%20fill%3D%22%238dc63f%22%3ESOLUTIONS%3C%2Ftext%3E%3C%2Fsvg%3E");
+      --font-display:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+      --font-body:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--shell); color: var(--fg); font: 18px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; }
+    .deck-shell { position: fixed; inset: 0; overflow: hidden; }
+    .deck-stage { width: 1920px; height: 1080px; background: var(--bg); position: relative; transform-origin: top left; box-shadow: 0 30px 80px rgba(0,0,0,0.28); }
+    .slide { position: absolute; inset: 0; overflow: hidden; }
+    .slide:not(.active) { display: none !important; }
+    :where(.slide.active) { display: flex; flex-direction: column; }
+    .deck-counter { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; background: rgba(31,58,99,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.08); color: #fff; font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.18em; z-index: 1000; }
+    .deck-counter button { width: 36px; height: 36px; background: transparent; color: #fff; border: 0; border-radius: 50%; font-size: 18px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+    .deck-counter button[disabled] { opacity: 0.3; cursor: default; }
+    .deck-counter .deck-count { padding: 0 14px; letter-spacing: 0.22em; }
+    .deck-counter .deck-count .total { color: rgba(255,255,255,0.5); }
+    .deck-hint { position: fixed; bottom: 26px; right: 28px; color: var(--muted); font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.2em; text-transform: uppercase; z-index: 999; pointer-events: none; }
+    @media print {
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body { width: 1920px !important; height: auto !important; overflow: visible !important; background: #fff !important; }
+      .deck-shell { position: static !important; display: block !important; inset: auto !important; }
+      .deck-stage { width: 1920px !important; height: auto !important; transform: none !important; box-shadow: none !important; position: static !important; }
+      .slide, .slide:not(.active) { display: flex !important; position: relative !important; inset: auto !important; width: 1920px !important; height: 1080px !important; page-break-after: always; break-after: page; }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .deck-counter, .deck-hint { display: none !important; }
+    }
+    /* ===== Inova per-deck styles — FIXED px for the 1920×1080 canvas ===== */
+    .s-frame { background-image: var(--brand-bg); background-size: 1920px 1080px; background-position: center; background-repeat: no-repeat; }
+    .stage { flex: 1; width: 100%; height: 100%; padding: 70px 130px 84px; display: flex; flex-direction: column; }
+    .stage--cover { align-items: center; justify-content: center; text-align: center; }
+    .slide-head { margin-left: 232px; margin-bottom: 44px; }
+    .slide-title { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em; color: var(--brand-navy); font-size: 62px; line-height: 1.03; }
+    .kicker { font-family: var(--font-display); font-weight: 700; color: var(--brand-green); font-size: 26px; margin-top: 10px; }
+    .kicker.blue { color: var(--brand-blue); }
+    .cover-title { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; color: var(--brand-navy); font-size: 108px; line-height: 1.0; letter-spacing: -0.01em; margin-bottom: 22px; max-width: 20ch; }
+    .cover-sub { font-style: italic; color: var(--fg); font-size: 36px; max-width: 40ch; }
+    .body { flex: 1; display: flex; align-items: center; min-height: 0; }
+    .body.top { align-items: flex-start; }
+    .lead { font-size: 30px; line-height: 1.5; color: var(--fg); max-width: 26ch; }
+    .cols { display: grid; gap: 56px; width: 100%; align-items: center; }
+    .cols-2 { grid-template-columns: 1fr 1fr; }
+    .cols-121 { grid-template-columns: 1fr 1.2fr 1fr; }
+    .col-title { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; color: var(--brand-blue); font-size: 32px; line-height: 1.1; margin-bottom: 16px; }
+    .col-text { color: var(--fg); font-size: 23px; line-height: 1.5; }
+    .checklist { list-style: none; display: grid; gap: 30px; }
+    .checklist li { display: grid; grid-template-columns: 46px 1fr; gap: 20px; align-items: start; }
+    .checklist li::before { content: ""; width: 42px; height: 42px; margin-top: 2px; border-radius: 999px; background: var(--brand-navy) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 22px no-repeat; }
+    .checklist li span { font-size: 27px; line-height: 1.4; color: var(--fg); }
+    .img-frame { border: 5px solid var(--brand-cyan); border-radius: 22px; background: #eef3f8; aspect-ratio: 4 / 3; display: grid; place-items: center; color: var(--muted); font-size: 20px; text-align: center; padding: 20px; box-shadow: 0 18px 34px rgba(31,58,99,0.14); }
+    .card-grid { display: grid; gap: 30px; width: 100%; }
+    .card-grid.n3 { grid-template-columns: repeat(3, 1fr); }
+    .card-grid.n4 { grid-template-columns: repeat(4, 1fr); }
+    .card { background: var(--brand-blue); color: #fff; border-radius: 18px; padding: 34px 28px; padding-top: 64px; position: relative; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .card__icon { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 84px; height: 84px; border-radius: 999px; background: #fff; border: 4px solid var(--brand-cyan); display: grid; place-items: center; color: var(--brand-navy); font-weight: 800; font-size: 30px; }
+    .card__title { font-weight: 800; text-transform: uppercase; font-size: 22px; line-height: 1.15; }
+    .card__text { font-size: 19px; line-height: 1.45; opacity: 0.96; }
+    .center-title { font-family: var(--font-display); font-weight: 800; color: var(--brand-navy); font-size: 46px; text-align: center; margin-bottom: 40px; }
+    .footer-url { position: absolute; right: 56px; bottom: 40px; font-size: 20px; color: var(--brand-green); }
+  </style>
+</head>
+<body>
+  <div class="deck-shell">
+    <div class="deck-stage" id="deck-stage">
+
+      <!-- ► SLOT: slides. First is `slide active s-frame`; the rest `slide s-frame`. -->
+
+      <section class="slide active s-frame" data-screen-label="01 Cover">
+        <div class="stage stage--cover">
+          <h1 class="cover-title">[Título de portada]</h1>
+          <p class="cover-sub">[Subtítulo en cursiva.]</p>
+        </div>
+      </section>
+
+      <section class="slide s-frame" data-screen-label="02 Cierre">
+        <div class="stage stage--cover">
+          <h2 class="cover-title">[Mensaje de cierre]</h2>
+          <p class="cover-sub">[Muchas gracias por su atención.]</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <nav class="deck-counter" role="navigation" aria-label="Deck navigation">
+    <button type="button" id="deck-prev" aria-label="Previous slide">‹</button>
+    <span class="deck-count"><span id="deck-cur">01</span> <span class="total">/ <span id="deck-total">01</span></span></span>
+    <button type="button" id="deck-next" aria-label="Next slide">›</button>
+  </nav>
+  <div class="deck-hint">← / → · space</div>
+
+  <script>
+    (function () {
+      var stage = document.getElementById('deck-stage');
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var prev = document.getElementById('deck-prev'), next = document.getElementById('deck-next');
+      var cur = document.getElementById('deck-cur'), total = document.getElementById('deck-total');
+      var STORE = 'deck:idx:' + (location.pathname || '/'), idx = 0;
+      function fit() {
+        var sw = window.innerWidth, sh = window.innerHeight, pad = 32;
+        var s = Math.min((sw - pad) / 1920, (sh - pad) / 1080);
+        if (!isFinite(s) || s <= 0) s = 1;
+        stage.style.transform = 'translate(' + ((sw - 1920 * s) / 2) + 'px,' + ((sh - 1080 * s) / 2) + 'px) scale(' + s + ')';
+      }
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      function paint() {
+        slides.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+        if (cur) cur.textContent = pad2(idx + 1);
+        if (total) total.textContent = pad2(slides.length);
+        if (prev) prev.toggleAttribute('disabled', idx <= 0);
+        if (next) next.toggleAttribute('disabled', idx >= slides.length - 1);
+      }
+      function go(i) { idx = Math.max(0, Math.min(slides.length - 1, i)); paint(); try { localStorage.setItem(STORE, String(idx)); } catch (_) {} }
+      function onKey(e) {
+        if (e.__odDeckKeyHandled) return;
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.__odDeckKeyHandled = true; e.preventDefault(); go(idx + 1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.__odDeckKeyHandled = true; e.preventDefault(); go(idx - 1); }
+        else if (e.key === 'Home') { e.__odDeckKeyHandled = true; e.preventDefault(); go(0); }
+        else if (e.key === 'End') { e.__odDeckKeyHandled = true; e.preventDefault(); go(slides.length - 1); }
+      }
+      window.addEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      if (prev) prev.addEventListener('click', function () { go(idx - 1); });
+      if (next) next.addEventListener('click', function () { go(idx + 1); });
+      document.body.setAttribute('tabindex', '-1'); document.body.style.outline = 'none';
+      function focusDeck() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (_) {} }
+      document.addEventListener('mousedown', focusDeck);
+      window.addEventListener('load', focusDeck);
+      try { var saved = parseInt(localStorage.getItem(STORE) || '0', 10); if (!isNaN(saved) && saved >= 0 && saved < slides.length) idx = saved; } catch (_) {}
+      window.addEventListener('resize', fit);
+      fit(); paint(); focusDeck();
+    })();
+  </script>
+</body>
+</html>
 ```
-inova-deck/
-├── SKILL.md               ← you're reading this
-├── assets/
-│   ├── template.html      ← seed: brand tokens + slide primitives + nav script (READ FIRST)
-│   ├── background.png      ← REQUIRED brand background (triangle frame + Inova logo). Ships with the folder.
-│   └── inova-logo.svg      ← OPTIONAL standalone logo (only if the background does NOT already embed it)
-├── references/
-│   └── layouts.md         ← paste-ready slide layouts matching the corporate deck
-└── example.html           ← baked gallery sample
+
+## Slide layouts — paste a `<section>` into `#deck-stage` and fill it
+
+Each is a full slide. First slide in the deck keeps `active`.
+
+**Section header + lead:**
+
+```html
+<section class="slide s-frame" data-screen-label="03 Sección">
+  <div class="stage">
+    <div class="slide-head"><h2 class="slide-title">[Título]</h2><p class="kicker">[Subtítulo verde]</p></div>
+    <div class="body"><p class="lead">[Una o dos frases concretas.]</p></div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </div>
+</section>
 ```
 
-> **The brand background is an asset, not CSS.** `assets/background.png` is the
-> Inova triangle frame (with the logo baked into the top-left). Every slide uses
-> it as a full-bleed `background-image`. If the file is missing the slides fall
-> back to plain white — still readable, but off-brand — so make sure it is
-> present before shipping.
+**Two columns with center image slot:**
 
-## Workflow
-
-### Step 0 — Pre-flight
-
-1. **Read `assets/template.html`** end-to-end (the `<style>` AND the `<script>`).
-   The script solves the iframe navigation bugs — do not rewrite it.
-2. **Read `references/layouts.md`** so you know the branded layouts (cover,
-   section header, two-column, checklist-with-image, circle diagram, 3/4 cards,
-   flow diagram, closing).
-3. The brand tokens are already baked into the seed's `:root`; you normally do
-   NOT need a separate DESIGN.md. Only override a token if the user explicitly
-   asks for a color change.
-
-### Step 1 — Copy the seed AND the background
-
-Copy `assets/template.html` to the project root as `index.html`, and copy
-`assets/background.png` to the project root as `background.png` (the seed
-references it project-relative). If you use a standalone logo, copy that too.
-Replace the page `<title>`.
-
-### Step 2 — Plan the slides BEFORE writing HTML
-
-Sketch the running order and which layout each slide uses, e.g.:
-
-```
-01  cover            FAXIAI + FAXIHIVE
-02  two-column       El problema
-03  cards-2          La visión (dos capas)
-04  circle-diagram   FaxiAI · 5 agentes
-05  checklist+image  El resultado
-06  cards-4          Por qué le importa a Microsoft
-07  closing          FaxiAI gana · FaxiHive entrega
+```html
+<section class="slide s-frame" data-screen-label="04 Dos columnas">
+  <div class="stage">
+    <div class="slide-head"><h2 class="slide-title">[Título]</h2></div>
+    <div class="body">
+      <div class="cols cols-121">
+        <div><h3 class="col-title">[Izquierda]</h3><p class="col-text">[Texto]</p></div>
+        <div class="img-frame">[Título o descripción corta — SIN &lt;img&gt;]</div>
+        <div><h3 class="col-title">[Derecha]</h3><p class="col-text">[Texto]</p></div>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </div>
+</section>
 ```
 
-Show this plan to the user before writing slide HTML — they can redirect cheaply.
+**Checklist + image:**
 
-### Step 3 — Paste and fill
+```html
+<section class="slide s-frame" data-screen-label="05 Checklist">
+  <div class="stage">
+    <div class="slide-head"><h2 class="slide-title">[Título]</h2><p class="kicker">[Subtítulo]</p></div>
+    <div class="body">
+      <div class="cols cols-2">
+        <ul class="checklist">
+          <li><span>[Punto 1]</span></li>
+          <li><span>[Punto 2]</span></li>
+          <li><span>[Punto 3]</span></li>
+        </ul>
+        <div class="img-frame">[Descripción corta]</div>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </div>
+</section>
+```
 
-For each planned slide, copy the matching `<section class="slide">` from
-`layouts.md` into the body. Replace bracketed text with real, specific copy.
-**No filler / no lorem.** Tag each slide with `data-screen-label="01 Cover"`, etc.,
-in order.
+**Blue cards — 3 or 4 across** (use `n3` or `n4`):
 
-### Step 4 — Self-check
-
-- Every slide is a `<section class="slide">` and carries the background frame.
-- Titles use `.slide-title` (navy), kickers use `.kicker` (green).
-- Content clears the top-left logo and the corner triangles (the `.slide__stage`
-  wrapper already insets for this).
-- The footer URL (`.footer-url`) appears on content slides, not on cover/closing.
-
-### Step 5 — Write the project file
-
-Write the completed deck HTML to `index.html`, then send one short assistant
-summary naming `index.html`. Do not paste the full HTML source in chat.
+```html
+<section class="slide s-frame" data-screen-label="06 Tarjetas">
+  <div class="stage">
+    <div class="slide-head"><h2 class="slide-title">[Título]</h2></div>
+    <div class="body top" style="flex-direction:column;">
+      <p class="center-title">[Frase central, opcional]</p>
+      <div class="card-grid n4">
+        <article class="card"><span class="card__icon">1</span><h3 class="card__title">[Card 1]</h3><p class="card__text">[Texto]</p></article>
+        <article class="card"><span class="card__icon">2</span><h3 class="card__title">[Card 2]</h3><p class="card__text">[Texto]</p></article>
+        <article class="card"><span class="card__icon">3</span><h3 class="card__title">[Card 3]</h3><p class="card__text">[Texto]</p></article>
+        <article class="card"><span class="card__icon">4</span><h3 class="card__title">[Card 4]</h3><p class="card__text">[Texto]</p></article>
+      </div>
+    </div>
+    <div class="footer-url">www.inovacorporation.com</div>
+  </div>
+</section>
+```
 
 ## Hard rules
 
-- **Every slide keeps the Inova background** — never remove `class="slide"` or
-  override its background to a flat color.
-- **Navy titles, green kickers, blue cards.** One accent family per slide.
-- **Content stays inside `.slide__stage`** so it never collides with the logo or
-  the corner triangles.
-- **Don't rewrite the nav script.** It's proven for the iframe preview.
-- **No `scrollIntoView()`** — it yanks the host page.
+- **Copy the framework verbatim** — the first `<style>`, the `.deck-counter`
+  chrome, and the `<script>`. You only author `<section class="slide">` blocks.
+- **Every slide is `class="slide s-frame"`** (first one adds `active`) so it
+  carries the Inova frame. Never a flat color.
+- **Fixed px inside slides** — the canvas is 1920×1080. Never `vw`/`vh`.
+- **Navy titles (`.slide-title`), green kickers (`.kicker`), blue cards (`.card`).**
+- **NO external images** — no `<img src="…file…">`, no `url('…file…')`. Use empty
+  `.img-frame` slots with a caption, or inline SVG / `data:` URIs only.
+- **Do NOT** rename the counter IDs, the localStorage key, or the
+  `.slide` / `.slide.active` selectors; the script reads them.
 - **`data-screen-label` on every slide.**

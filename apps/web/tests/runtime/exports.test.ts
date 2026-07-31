@@ -22,6 +22,7 @@ import {
   openSandboxedPreviewInNewTab,
   prepareImageExportTarget,
   planDeckImageCapture,
+  printArtifactPdf,
   requestPreviewSnapshot,
   sourceLooksLikeExportableDeck,
 } from '../../src/runtime/exports';
@@ -1001,11 +1002,17 @@ describe('sandboxed preview Blob exports', () => {
   let openedFeatures: string | undefined;
   let mockWin: { opener: unknown; location: { href: string } };
   let openCalls: string[][];
+  // The browser PDF fallback now prints through a hidden iframe instead of a
+  // popup window, so tests assert the iframe's src rather than window.open.
+  let frameSrc: string | undefined;
+  let appendedFrame: unknown;
 
   beforeEach(() => {
     capturedBlob = undefined;
     openedFeatures = undefined;
     openCalls = [];
+    frameSrc = undefined;
+    appendedFrame = undefined;
     mockWin = { opener: {}, location: { href: '' } };
     vi.stubGlobal('URL', {
       createObjectURL: (blob: Blob) => {
@@ -1025,6 +1032,36 @@ describe('sandboxed preview Blob exports', () => {
         return mockWin;
       },
       addEventListener: () => {},
+    });
+    vi.stubGlobal('document', {
+      createElement: (_tag: string) => {
+        const el: Record<string, unknown> = {
+          style: {},
+          setAttribute: () => {},
+          // Fire `load` on the microtask queue with a null contentWindow so the
+          // programmatic-capture path's waitForIframeWindow() rejects fast (its
+          // iframe truly has no reachable window in this node env) and the code
+          // proceeds to the hidden-iframe print fallback we're exercising.
+          addEventListener: (type: string, cb: () => void) => {
+            if (type === 'load' && typeof cb === 'function') void Promise.resolve().then(cb);
+          },
+          remove: () => {},
+          contentWindow: null,
+        };
+        Object.defineProperty(el, 'src', {
+          get: () => frameSrc,
+          set: (v: string) => {
+            frameSrc = v;
+          },
+        });
+        return el;
+      },
+      body: {
+        appendChild: (el: unknown) => {
+          appendedFrame = el;
+          return el;
+        },
+      },
     });
     vi.stubGlobal('alert', vi.fn());
   });
@@ -1081,9 +1118,9 @@ describe('sandboxed preview Blob exports', () => {
   it('uses a sandboxed Blob wrapper with synchronous popup detection for PDF exports', async () => {
     await exportAsPdf('<script>window.parent.document.body.innerHTML="owned"</script>', 'PDF');
 
-    expect(openCalls).toEqual([['', '_blank']]);
-    expect(mockWin.opener).toBeNull();
-    expect(mockWin.location.href).toBe('blob:test');
+    expect(openCalls).toEqual([]);
+    expect(frameSrc).toBe('blob:test');
+    expect(appendedFrame).toBeDefined();
     expect(capturedBlob).toBeDefined();
     const wrapper = await capturedBlob!.text();
     expect(wrapper).toContain('sandbox="allow-scripts allow-modals"');
@@ -1095,9 +1132,8 @@ describe('sandboxed preview Blob exports', () => {
   it('preserves deck print handling inside sandboxed PDF exports', async () => {
     await exportAsPdf('<section class="slide">One</section>', 'Deck PDF', { deck: true });
 
-    expect(openCalls).toEqual([['', '_blank']]);
-    expect(mockWin.opener).toBeNull();
-    expect(mockWin.location.href).toBe('blob:test');
+    expect(openCalls).toEqual([]);
+    expect(frameSrc).toBe('blob:test');
     expect(capturedBlob).toBeDefined();
     const wrapper = await capturedBlob!.text();
     expect(wrapper).toContain('sandbox="allow-scripts allow-modals"');
@@ -1128,9 +1164,8 @@ describe('sandboxed preview Blob exports', () => {
       sandboxedPreview: false,
     });
 
-    expect(openCalls).toEqual([['', '_blank']]);
-    expect(mockWin.opener).toEqual({});
-    expect(mockWin.location.href).toBe('blob:test');
+    expect(openCalls).toEqual([]);
+    expect(frameSrc).toBe('blob:test');
     expect(capturedBlob).toBeDefined();
     const doc = await capturedBlob!.text();
     expect(doc).not.toContain('sandbox="allow-scripts allow-modals"');
@@ -1139,19 +1174,43 @@ describe('sandboxed preview Blob exports', () => {
     expect(doc).toContain("window.__odPrintReady===true");
   });
 
-  it('shows an alert and revokes the blob URL when the popup is blocked', async () => {
+  it('prints through a hidden iframe with no pop-up and no blocked-popup alert', async () => {
+    // The fallback used to window.open() a tab, which the popup blocker killed
+    // because it ran after an await (gesture lost). It now appends a hidden
+    // iframe whose injected script self-prints — no gesture needed, so even a
+    // null-returning window.open() is irrelevant and no alert is shown.
     vi.stubGlobal('window', {
+      location: {
+        href: 'https://open-design.test/plugins/example',
+        origin: 'https://open-design.test',
+      },
       open: () => null,
       addEventListener: () => {},
     });
 
-    const revokeSpy = URL.revokeObjectURL as ReturnType<typeof vi.fn>;
-    revokeSpy.mockClear();
+    await exportAsPdf('<p>test</p>', 'No Popup');
 
-    await exportAsPdf('<p>test</p>', 'Blocked');
+    expect(alert).not.toHaveBeenCalled();
+    expect(frameSrc).toBe('blob:test');
+    expect(appendedFrame).toBeDefined();
+  });
 
-    expect(alert).toHaveBeenCalledWith('Popup blocked! Click the popup-blocked icon in your browser address bar (or browser menu), choose "Always allow pop-ups" for this site, then retry Export PDF.');
-    expect(revokeSpy).toHaveBeenCalledWith('blob:test');
+  it('printArtifactPdf (Dizenia own export) prints a deck via hidden iframe with deck print CSS and forced backgrounds', async () => {
+    await printArtifactPdf('<section class="slide">One</section>', 'Own Deck PDF', { deck: true });
+
+    // No pop-up, no /api round-trip — straight to the browser print engine.
+    expect(openCalls).toEqual([]);
+    expect(alert).not.toHaveBeenCalled();
+    expect(frameSrc).toBe('blob:test');
+    expect(appendedFrame).toBeDefined();
+    expect(capturedBlob).toBeDefined();
+    const wrapper = await capturedBlob!.text();
+    // One-slide-per-page deck print rules + forced backgrounds are injected.
+    expect(wrapper).toContain('data-deck-print=&quot;injected&quot;');
+    expect(wrapper).toContain('print-color-adjust: exact');
+    // The wrapper self-prints once the artifact signals ready.
+    expect(wrapper).toContain('window.print()');
+    expect(wrapper).toContain('__odPrintReady');
   });
 
   it('uses the desktop native print bridge when the host PDF bridge is available', async () => {

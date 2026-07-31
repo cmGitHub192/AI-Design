@@ -4,6 +4,7 @@ import nodePath from 'node:path';
 import os from 'node:os';
 import { readFile, rm } from 'node:fs/promises';
 import { isBlocked as isBlockedSystemDir } from './linked-dirs.js';
+import { renderHtmlToPdf, renderHtmlToPptx } from './native-pdf.js';
 import type { RouteDeps } from './server-context.js';
 import {
   InlineAssetsLimitError,
@@ -433,6 +434,31 @@ export function registerImportRoutes(app: Express, ctx: RegisterImportRoutesDeps
 
 export interface RegisterProjectExportRoutesDeps extends RouteDeps<'db' | 'http' | 'paths' | 'node' | 'ids' | 'projectStore' | 'exports' | 'projectFiles' | 'validation'> {}
 
+// A project-relative image ref worth inlining for a headless-browser export:
+// not a data:/http(s)/protocol-relative/#/api URL, and with a raster/vector
+// image extension.
+function isInlinableImageRef(u: string): boolean {
+  if (!u) return false;
+  if (/^(data:|https?:|\/\/|#|mailto:|tel:|blob:)/i.test(u)) return false;
+  if (u.startsWith('/api/')) return false;
+  return /\.(png|jpe?g|gif|webp|svg|bmp|avif)(\?[^#]*)?(#.*)?$/i.test(u);
+}
+
+function imageMimeForPath(u: string): string | null {
+  const ext = ((u.split('?')[0] ?? '').split('#')[0] ?? '').match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
+  switch (ext) {
+    case 'png': return 'image/png';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'gif': return 'image/gif';
+    case 'webp': return 'image/webp';
+    case 'svg': return 'image/svg+xml';
+    case 'bmp': return 'image/bmp';
+    case 'avif': return 'image/avif';
+    default: return null;
+  }
+}
+
 export function registerProjectExportRoutes(app: Express, ctx: RegisterProjectExportRoutesDeps) {
   const { db } = ctx;
   const { sendApiError } = ctx.http;
@@ -479,6 +505,48 @@ export function registerProjectExportRoutes(app: Express, ctx: RegisterProjectEx
       metadata,
     );
     return result.content;
+  }
+
+  // Inline project-relative <img>/CSS url() image assets as data URIs. The live
+  // preview resolves these against the project's assets/ dir; the headless
+  // browser renders a copy in a temp dir and can't, so without this the export
+  // shows broken images (alt text only). inlineRelativeAssets() only covers
+  // <link>/<script>, so images need this dedicated pass.
+  async function inlineDeckImageAssets(
+    html: string,
+    projectId: string,
+    fileName: string,
+    metadata: unknown,
+  ): Promise<string> {
+    const baseDir = fileName.includes('/') ? fileName.slice(0, fileName.lastIndexOf('/') + 1) : '';
+    const refs = new Set<string>();
+    const collect = (re: RegExp) => {
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(html))) {
+        const u = (m[1] || '').trim();
+        if (isInlinableImageRef(u)) refs.add(u);
+      }
+    };
+    collect(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi);
+    collect(/url\(\s*["']?([^"')]+?)["']?\s*\)/gi);
+    if (refs.size === 0) return html;
+
+    let out = html;
+    for (const ref of refs) {
+      const mime = imageMimeForPath(ref);
+      if (!mime) continue;
+      const clean = ref.replace(/^\.\//, '').split('?')[0]!.split('#')[0]!;
+      const rel = clean.startsWith('/') ? clean.slice(1) : baseDir + clean;
+      try {
+        const file = await readProjectFile(PROJECTS_DIR, projectId, rel, metadata);
+        if (!file?.buffer || file.buffer.length === 0 || file.buffer.length > 8 * 1024 * 1024) continue;
+        const dataUri = `data:${mime};base64,${file.buffer.toString('base64')}`;
+        out = out.split(`"${ref}"`).join(`"${dataUri}"`).split(`'${ref}'`).join(`'${dataUri}'`);
+      } catch {
+        /* asset missing/unreadable — leave the original ref untouched */
+      }
+    }
+    return out;
   }
 
   function screenshotRenderClientError(
@@ -1014,6 +1082,112 @@ export function registerProjectExportRoutes(app: Express, ctx: RegisterProjectEx
   // host-compositor snapshot, the size never depends on the preview pane.
   app.post('/api/projects/:id/export/image', async (req, res) => {
     await handleScreenshotExport(res, 'image', req.params.id, req.body);
+  });
+
+  // Dizenia's own HTML→PDF: renders the deck with the browser already on the
+  // machine (Edge/Chrome, headless --print-to-pdf) and streams the finished PDF
+  // back in one request. No Electron desktop renderer, no npm PDF lib, no print
+  // dialog. Returns 501 when no browser is installed so the web client can fall
+  // back to its client-side print path.
+  app.post('/api/projects/:id/deck-pdf', async (req, res) => {
+    try {
+      const projectId = req.params.id;
+      if (!isSafeId(projectId)) {
+        return sendApiError(res, 400, 'BAD_REQUEST', 'invalid project id');
+      }
+      const body = req.body || {};
+      const fileName = typeof body.fileName === 'string' ? body.fileName : '';
+      if (!fileName) return sendApiError(res, 400, 'BAD_REQUEST', 'fileName required');
+      const project = getProject(db, projectId);
+      const metadata = project?.metadata ?? null;
+      const versionId = normalizeExportVersionId(body?.versionId);
+      let html = await readExportVersionSource(projectId, fileName, versionId, metadata);
+      if (html === undefined) {
+        const file = await readProjectFile(PROJECTS_DIR, projectId, fileName, metadata);
+        html = file?.buffer?.toString('utf8');
+      }
+      if (typeof html !== 'string' || html.length === 0) {
+        return sendApiError(res, 404, 'FILE_NOT_FOUND', 'file not found');
+      }
+      html = await inlineDeckImageAssets(html, projectId, fileName, metadata);
+      let buffer: Buffer;
+      try {
+        buffer = await renderHtmlToPdf(html, { deck: body?.deck !== false });
+      } catch (err: any) {
+        if (err?.code === 'NO_BROWSER') {
+          return sendApiError(res, 501, 'RENDERER_UNAVAILABLE', String(err?.message || err));
+        }
+        throw err;
+      }
+      const base = fileName.replace(/^.*\//, '').replace(/\.html?$/i, '');
+      const slug =
+        sanitizeArchiveFilename(typeof body?.title === 'string' && body.title ? body.title : base) || 'deck';
+      const filename = `${slug}.pdf`;
+      const asciiFallback = filename.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '_') || 'deck.pdf';
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      );
+      res.send(buffer);
+    } catch (err: any) {
+      sendApiError(res, 400, 'BAD_REQUEST', String(err?.message || err));
+    }
+  });
+
+  // Dizenia's own HTML→PPTX: one system-browser screenshot per slide, assembled
+  // into an image-per-slide 16:9 .pptx (pixel-perfect, no desktop renderer, no
+  // print dialog). 501 when no browser is installed; 422 for a non-deck artifact.
+  app.post('/api/projects/:id/deck-pptx', async (req, res) => {
+    try {
+      const projectId = req.params.id;
+      if (!isSafeId(projectId)) {
+        return sendApiError(res, 400, 'BAD_REQUEST', 'invalid project id');
+      }
+      const body = req.body || {};
+      const fileName = typeof body.fileName === 'string' ? body.fileName : '';
+      if (!fileName) return sendApiError(res, 400, 'BAD_REQUEST', 'fileName required');
+      const project = getProject(db, projectId);
+      const metadata = project?.metadata ?? null;
+      const versionId = normalizeExportVersionId(body?.versionId);
+      let html = await readExportVersionSource(projectId, fileName, versionId, metadata);
+      if (html === undefined) {
+        const file = await readProjectFile(PROJECTS_DIR, projectId, fileName, metadata);
+        html = file?.buffer?.toString('utf8');
+      }
+      if (typeof html !== 'string' || html.length === 0) {
+        return sendApiError(res, 404, 'FILE_NOT_FOUND', 'file not found');
+      }
+      html = await inlineDeckImageAssets(html, projectId, fileName, metadata);
+      let buffer: Buffer;
+      try {
+        buffer = await renderHtmlToPptx(html);
+      } catch (err: any) {
+        if (err?.code === 'NO_BROWSER') {
+          return sendApiError(res, 501, 'RENDERER_UNAVAILABLE', String(err?.message || err));
+        }
+        if (err?.code === 'NO_SLIDES') {
+          return sendApiError(res, 422, 'NO_SLIDES', String(err?.message || err));
+        }
+        throw err;
+      }
+      const base = fileName.replace(/^.*\//, '').replace(/\.html?$/i, '');
+      const slug =
+        sanitizeArchiveFilename(typeof body?.title === 'string' && body.title ? body.title : base) || 'deck';
+      const filename = `${slug}.pptx`;
+      const asciiFallback = filename.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '_') || 'deck.pptx';
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      );
+      res.send(buffer);
+    } catch (err: any) {
+      sendApiError(res, 400, 'BAD_REQUEST', String(err?.message || err));
+    }
   });
 
   // Generic programmatic export (PDF / image / PPTX) for the `od export` CLI and

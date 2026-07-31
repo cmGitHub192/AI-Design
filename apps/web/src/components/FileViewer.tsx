@@ -85,15 +85,16 @@ import {
   exportAsHtml,
   exportAsJsx,
   exportAsMd,
-  exportAsPdf,
   exportAsZip,
   exportProjectAsHtml,
-  exportProjectAsPdf,
   exportProjectAsPptx,
   exportProjectAsZip,
+  exportProjectDeckPdf,
+  exportProjectDeckPptx,
   exportProjectImageDataUrl,
   exportProjectScreenshotPdf,
   exportSnapshotAsPdf,
+  printArtifactPdf,
   copyImageDataUrlToClipboard,
   exportReactComponentAsHtml,
   exportReactComponentAsZip,
@@ -10324,17 +10325,29 @@ function HtmlViewer({
       // A SEMANTIC failure (bad deck routing, unreadable renderer output,
       // renderer 502, ...) must surface, not silently downgrade to the vector
       // PDF, which can reintroduce the fidelity bugs the screenshot path
-      // exists to avoid. Only a genuinely unavailable renderer falls through.
+      // exists to avoid. Only a genuinely unavailable renderer falls through
+      // to Dizenia's own browser-print PDF below.
       if (!('unavailable' in res)) throw new Error(res.error);
     }
-    await exportProjectAsPdf({
-      deck: pdfDeck,
-      fallbackPdf: () => exportAsPdf(pdfSource, pdfTitle, { deck: pdfDeck, onProgress: onExportProgress }),
-      filePath: file.name,
-      projectId,
-      title: pdfTitle,
-      ...(context?.versionId ? { versionId: context.versionId } : {}),
-    });
+    // Dizenia's own PDF export, decoupled from Open Design's /api/export/*.
+    // First try our daemon renderer: it drives the system browser (Edge/Chrome
+    // headless) and streams back a finished PDF file — one click, no dialog.
+    try {
+      const native = await exportProjectDeckPdf({
+        projectId,
+        fileName: file.name,
+        title: pdfTitle,
+        deck: pdfDeck,
+        ...(context?.versionId ? { versionId: context.versionId } : {}),
+      });
+      if (native === 'ok') return;
+    } catch (err) {
+      console.warn('[exportHtmlPdf] native deck-pdf failed, using client print:', err);
+    }
+    // Fallback (no system browser on the daemon host): print the artifact
+    // through the browser's own engine — pixel-perfect, no pop-up; the user
+    // picks "Save as PDF" in the dialog.
+    await printArtifactPdf(pdfSource, pdfTitle, { deck: pdfDeck });
   }
 
   function triggerPdfExport(context?: HtmlVersionExportContext) {
@@ -12594,6 +12607,22 @@ function HtmlViewer({
                   const editable = pptxExportMode === 'editable';
                   setPptxExportModalOpen(false);
                   fireShareExport('pptx', async () => {
+                    // Image-per-slide PPTX renders through Dizenia's own daemon
+                    // endpoint (system browser, one screenshot per slide) — no
+                    // desktop renderer required. Editable PPTX (native shapes)
+                    // still needs the desktop path.
+                    if (!editable) {
+                      try {
+                        const own = await exportProjectDeckPptx({
+                          projectId,
+                          fileName: file.name,
+                          title: exportTitle,
+                        });
+                        if (own === 'ok') return;
+                      } catch (err) {
+                        console.warn('[pptx] native deck-pptx failed, trying desktop path:', err);
+                      }
+                    }
                     const res = await exportProjectAsPptx({
                       projectId,
                       fileName: file.name,
