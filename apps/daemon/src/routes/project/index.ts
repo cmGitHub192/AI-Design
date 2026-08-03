@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { rm } from 'node:fs/promises';
+import { rm, readdir, mkdir, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Express, Response } from 'express';
 import {
@@ -1226,6 +1226,36 @@ export function registerProjectRoutes(app: Express, ctx: RegisterProjectRoutesDe
   const { subscribeFileEvents, activeProjectEventSinks } = ctx.events;
   const { randomId } = ctx.ids;
   const { validateProjectDesignSystemId, validateProjectSkillId } = ctx.validation;
+
+  // Copy a chosen design-template's brand image assets (e.g. the Inova
+  // background.png) into a new project's assets/ dir. Lets a generated deck
+  // reference `assets/background.png` and have it resolve in the preview AND
+  // the export — the model can't embed the large image inline itself. No-op for
+  // functional skills / templates that ship no image assets.
+  const designTemplatesRoot = path.resolve(SKILLS_DIR, '..', 'design-templates');
+  async function copyDesignTemplateImageAssets(
+    skillId: string,
+    projectDir: string,
+  ): Promise<void> {
+    const srcAssets = path.join(designTemplatesRoot, skillId, 'assets');
+    let entries: string[];
+    try {
+      entries = await readdir(srcAssets);
+    } catch {
+      return;
+    }
+    const images = entries.filter((f) => /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(f));
+    if (images.length === 0) return;
+    const destAssets = path.join(projectDir, 'assets');
+    await mkdir(destAssets, { recursive: true });
+    for (const img of images) {
+      try {
+        await copyFile(path.join(srcAssets, img), path.join(destAssets, img));
+      } catch {
+        /* skip an unreadable asset */
+      }
+    }
+  }
   async function loadPluginRegistryView() {
     const [skills, designSystems] = await Promise.all([
       listSkills(SKILLS_DIR),
@@ -1725,6 +1755,19 @@ export function registerProjectRoutes(app: Express, ctx: RegisterProjectRoutesDe
         }
         throw err;
       }
+      // Bring the chosen design-template's brand images into the project so a
+      // deck's `assets/background.png` reference resolves everywhere.
+      if (normalizedSkillId) {
+        try {
+          await ensureProject(PROJECTS_DIR, id, projectMetadata);
+          await copyDesignTemplateImageAssets(
+            normalizedSkillId,
+            resolveProjectDir(PROJECTS_DIR, id, projectMetadata),
+          );
+        } catch (err) {
+          console.warn('[create] copy design-template assets failed', err);
+        }
+      }
       // Seed a default conversation so the UI always has somewhere to write.
       const cid = randomId();
       const initialSessionMode = normalizeChatSessionMode(
@@ -1745,7 +1788,14 @@ export function registerProjectRoutes(app: Express, ctx: RegisterProjectRoutesDe
             && req.body.appliedPluginSnapshotId.trim().length > 0;
       let resolveBody =
         explicitPlugin ? (req.body as Record<string, unknown>) : null;
-      if (!resolveBody && initialSessionMode === 'design') {
+      // A project pinned to a user-chosen design-template skill ("Mis
+      // plantillas") must not have the kind's default scenario plugin applied —
+      // the bound skillId is the template and drives generation directly.
+      const pinnedTemplate = Boolean(
+        (projectMetadata as { pinnedTemplateSkill?: boolean } | null | undefined)
+          ?.pinnedTemplateSkill,
+      );
+      if (!resolveBody && initialSessionMode === 'design' && !pinnedTemplate) {
         const fallbackPluginId = defaultScenarioPluginIdForProjectMetadata(projectMetadata);
         if (fallbackPluginId && getInstalledPlugin(db, fallbackPluginId)) {
           resolveBody = { ...(req.body || {}), pluginId: fallbackPluginId };

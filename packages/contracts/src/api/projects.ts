@@ -117,6 +117,12 @@ export interface ProjectMetadata {
   includeOsWidgets?: boolean;
   templateId?: string;
   templateLabel?: string;
+  // Set when a project is created from a specific design-template skill the user
+  // deliberately chose (e.g. the "Mis plantillas" Home section). The daemon's
+  // run flow must then NOT auto-apply the kind's default scenario plugin (which
+  // would compete with / override the chosen template skill); the bound
+  // `skillId` drives generation directly.
+  pinnedTemplateSkill?: boolean;
   // Template/gallery duplication provenance. Unlike examplePrompt, this path
   // creates a project by copying existing files and does not launch an agent.
   duplicatedFromPluginId?: string;

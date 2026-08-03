@@ -36,7 +36,7 @@ od:
   design_system:
     requires: false
     sections: [color, typography, layout, components]
-  category: "corporate-strategy"
+  category: "mis-plantillas"
   scenario: "strategy"
   example_prompt: "Crea una presentación con la plantilla de marca Inova Solutions. Tema: [tu tema]. Público: [tu público]. Usa el fondo corporativo de triángulos en todas las diapositivas, títulos en azul marino, subtítulos verdes y tarjetas azules redondeadas. Antes de escribir, pregúntame solo lo esencial que falte (público, objetivo, número de diapositivas, datos que deben aparecer). Luego propón el plan de diapositivas y escríbelas."
 ---
@@ -68,14 +68,18 @@ You edit ONLY:
 scroll model. Sizes inside slides are **fixed px** for the 1920×1080 canvas
 (never `vw`/`vh`).
 
-## Brand background — inline SVG, never an external file
+## Brand background — real PNG with an inline-SVG fallback
 
-The `--brand-bg` token already holds the Inova triangle frame + navy "Inova"
-logo as an inline SVG. It renders in the sandboxed preview AND in a downloaded
-file. **Never reference external image files** (`<img src="foo.png">`,
-`url('bar.jpg')`) — the sandbox can't fetch them and they render broken. For
-photo slots leave the `.img-frame` empty or put a short caption inside it; only
-inline SVG / `data:` URIs are allowed.
+`.s-frame` layers TWO backgrounds: `url("assets/background.png")` on top of the
+inline-SVG `--brand-bg` underneath. The project ships the real Inova
+`assets/background.png` (the daemon copies it in when you start from this
+template), so it covers the SVG and every slide shows the exact brand image; if
+that file were ever missing, the SVG recreation still shows through — never a
+blank frame. **Leave the `.s-frame` rule and `--brand-bg` exactly as written.**
+
+Do NOT add OTHER external image files for photo slots (`<img src="foo.png">` to
+files that don't exist) — leave `.img-frame` empty or put a short caption inside
+it.
 
 Every slide carries the frame via `class="slide s-frame"`. The logo sits top-left,
 so titles use `.slide-head` (already indented past it).
@@ -133,7 +137,7 @@ humans — but generate from the inline copy below, not by reading files.
       .deck-counter, .deck-hint { display: none !important; }
     }
     /* ===== Inova per-deck styles — FIXED px for the 1920×1080 canvas ===== */
-    .s-frame { background-image: var(--brand-bg); background-size: 1920px 1080px; background-position: center; background-repeat: no-repeat; }
+    .s-frame { background-image: url("assets/background.png"), var(--brand-bg); background-size: cover, 1920px 1080px; background-position: center, center; background-repeat: no-repeat, no-repeat; }
     .stage { flex: 1; width: 100%; height: 100%; padding: 70px 130px 84px; display: flex; flex-direction: column; }
     .stage--cover { align-items: center; justify-content: center; text-align: center; }
     .slide-head { margin-left: 232px; margin-bottom: 44px; }

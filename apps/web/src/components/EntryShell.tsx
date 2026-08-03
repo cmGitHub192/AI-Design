@@ -691,6 +691,34 @@ export function EntryShell({
     });
   }
 
+  // Start a new project bound to one of the user's own design templates (the
+  // "Mis plantillas" Home section). Mirrors picking the template in the New
+  // Project panel: a project pinned to the template's skill + kind, landed in
+  // so the user types their topic.
+  function handleUseTemplate(template: SkillSummary) {
+    dismissRecommendation();
+    const allowedKinds = ['prototype', 'deck', 'image', 'video', 'audio', 'template'];
+    const kind = (allowedKinds.includes(template.mode) ? template.mode : 'other') as ProjectMetadata['kind'];
+    // Bypass handleCreate (which attaches the kind's default scenario plugin):
+    // pin the project to the chosen template skill and flag it so the daemon
+    // skips the default plugin. The bound skillId then drives generation — no
+    // need for the user to type "use the Inova template" every time.
+    void Promise.resolve(
+      onCreateProject({
+        name: t('common.untitled'),
+        skillId: template.id,
+        designSystemId: null,
+        metadata: { kind, pinnedTemplateSkill: true },
+        // Pre-fill the composer with the template's own example prompt so the
+        // landing project reads as "using this template" (not a blank generic
+        // deck): the user just replaces the [tu tema] placeholder and sends.
+        ...(template.examplePrompt ? { pendingPrompt: template.examplePrompt } : {}),
+      }),
+    ).catch((err) => {
+      console.warn('Failed to start from template', err);
+    });
+  }
+
   function handleCreate(input: CreateInput) {
     // The NewProjectModal no longer asks the user to pick a plugin.
     // Each project kind is silently bound to its default scenario
@@ -1101,6 +1129,8 @@ export function EntryShell({
                 promptHandoff={homePromptHandoff}
                 skills={skills}
                 skillsLoading={skillsLoading}
+                designTemplates={designTemplates}
+                onUseTemplate={handleUseTemplate}
                 connectors={connectors}
                 promptTemplates={promptTemplates}
                 recommendation={onboardingRec}

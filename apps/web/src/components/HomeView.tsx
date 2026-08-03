@@ -102,6 +102,7 @@ import { PluginDetailsModal } from './PluginDetailsModal';
 import { SkillDetailsModal } from './SkillDetailsModal';
 import { HomeTemplatesReveal } from './HomeTemplatesReveal';
 import { PluginsHomeSection } from './PluginsHomeSection';
+import { MyTemplatesSection } from './MyTemplatesSection';
 import type { PluginLoopSubmit } from './PluginLoopHome';
 import { localizePluginTitle } from './plugins-home/localization';
 import type { PluginUseAction } from './plugins-home/useActions';
@@ -239,6 +240,10 @@ interface Props {
   promptHandoff?: HomePromptHandoff | null;
   skills?: SkillSummary[];
   skillsLoading?: boolean;
+  // The user's own design templates (marked `od.category: "mis-plantillas"`),
+  // surfaced in the "Mis plantillas" Home section next to Community.
+  designTemplates?: SkillSummary[];
+  onUseTemplate?: (template: SkillSummary) => void;
   connectors?: ConnectorDetail[];
   promptTemplates?: PromptTemplateSummary[];
   // Personalized first-run starting point (spec §7). Null unless the user just
@@ -320,6 +325,8 @@ export function HomeView({
   promptHandoff,
   skills = EMPTY_SKILLS,
   skillsLoading = false,
+  designTemplates = EMPTY_SKILLS,
+  onUseTemplate,
   connectors = EMPTY_CONNECTORS,
   promptTemplates = EMPTY_PROMPT_TEMPLATES,
   recommendation = null,
@@ -2236,6 +2243,13 @@ export function HomeView({
         {...(onDuplicateProject ? { onDuplicate: onDuplicateProject } : {})}
         {...(onRenameProject ? { onRename: onRenameProject } : {})}
       />
+
+      {onUseTemplate ? (
+        <MyTemplatesSection
+          templates={designTemplates.filter((tpl) => tpl.category === 'mis-plantillas')}
+          onUse={onUseTemplate}
+        />
+      ) : null}
 
       <HomeTemplatesReveal
         enabled={!projectsLoading && projects.length === 0}

@@ -552,7 +552,15 @@ export function registerRunRoutes(app: Express, ctx: RegisterRunRoutesDeps) {
         const hasPin =
           typeof projectRow?.appliedPluginSnapshotId === 'string'
           && projectRow.appliedPluginSnapshotId.length > 0;
-        if (!hasPin) {
+        // When the project was created from a specific design-template skill the
+        // user chose ("Mis plantillas"), the bound skillId IS the template — do
+        // NOT auto-apply the kind's default scenario plugin (e.g. simple-deck),
+        // which would compete with and override the chosen template.
+        const pinnedTemplate = Boolean(
+          (projectRow?.metadata as { pinnedTemplateSkill?: boolean } | null | undefined)
+            ?.pinnedTemplateSkill,
+        );
+        if (!hasPin && !pinnedTemplate) {
           const fallbackPluginId = defaultScenarioPluginIdForProjectMetadata(
             toScenarioProjectMetadata(projectRow?.metadata),
           );
