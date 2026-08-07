@@ -2,39 +2,68 @@
    Matches the split hero + form login mockup. */
 
 .page {
-  --purple: #6d28d9;
-  --purple-light: #7c3aed;
+  /* Brand purple and amber are the two stops of the logo's own gradient. */
+  --purple: #5a22cf;
+  --purple-light: #6c2eed;
   --purple-2: #8b5cf6;
-  --orange: #f6a623;
-  --ink: #1c1b2e;
-  --muted: #6b7280;
-  --field-border: #e6e4ee;
-  --serif: 'Fraunces', 'Georgia', 'Times New Roman', serif;
+  --orange: #f9d265;
+  --ink: #16162b;
+  --muted: #7b8394;
+  --field-border: #e8e6f0;
+  --serif: var(--font-fraunces, 'Fraunces'), 'Georgia', 'Times New Roman', serif;
 
   position: fixed;
   inset: 0;
   display: flex;
-  background: linear-gradient(135deg, #f5f2fd 0%, #ece6fb 55%, #e7e0fa 100%);
+  background: linear-gradient(135deg, #f6f3fd 0%, #efeafc 50%, #e9e2fb 100%);
   color: var(--ink);
   overflow: auto;
 }
 
+.sparkle {
+  display: block;
+  flex: none;
+}
+
 /* ---------------- LEFT — brand / hero ---------------- */
 .left {
-  flex: 1 1 46%;
+  flex: 1 1 48%;
   min-width: 0;
-  padding: clamp(32px, 5vw, 72px);
+  padding: clamp(28px, 3.8vw, 60px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 28px;
+  gap: clamp(14px, 1.8vh, 22px);
   position: relative;
+  overflow: hidden;
 }
+
+/* faint arc sweeping through the upper-right of the hero column */
+.arc {
+  position: absolute;
+  top: -34%;
+  /* Logical insets: in Arabic/Farsi the hero column mirrors, and physical
+     `right` would drop these ornaments on top of the headline. */
+  inset-inline-end: -30%;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(124, 58, 237, 0.13);
+  pointer-events: none;
+}
+
+.pageSpark {
+  position: absolute;
+  filter: drop-shadow(0 6px 12px rgba(124, 58, 237, 0.2));
+  pointer-events: none;
+}
+.ps1 { top: 7%; inset-inline-end: 14%; }
+.ps2 { top: 31%; inset-inline-end: 12%; }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 .brandText {
   display: flex;
@@ -43,22 +72,26 @@
 }
 .brandName {
   font-family: var(--serif);
-  font-size: clamp(30px, 3vw, 40px);
+  font-size: clamp(28px, 2.8vw, 38px);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
+}
+/* "Disen-ia": the AI syllable carries the brand purple. */
+.brandNameAccent {
+  color: var(--purple-light);
 }
 .brandTagline {
   color: var(--purple-light);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  margin-top: 6px;
+  margin-top: 9px;
 }
 
 .headline {
   font-family: var(--serif);
-  font-size: clamp(34px, 4.4vw, 56px);
+  font-size: clamp(28px, 3.4vw, 45px);
   font-weight: 700;
-  line-height: 1.06;
+  line-height: 1.14;
   letter-spacing: -0.015em;
   margin: 8px 0 0;
 }
@@ -66,117 +99,202 @@
   color: var(--purple-light);
   font-style: italic;
 }
+.headlineDot {
+  color: #a99cc4;
+}
 
 .subtitle {
   color: var(--muted);
-  font-size: clamp(15px, 1.3vw, 17px);
-  line-height: 1.6;
-  max-width: 30rem;
+  font-size: clamp(13.5px, 1vw, 15.5px);
+  line-height: 1.62;
+  max-width: 22rem;
 }
 
 /* ---------------- LEFT — decorative illustration ---------------- */
 .illustration {
   position: relative;
-  height: clamp(200px, 24vw, 300px);
-  margin-top: 12px;
+  /* Capped against viewport height too, so a short window shrinks the art
+     instead of pushing the hero column past the fold. */
+  height: min(clamp(160px, 21vw, 280px), 30vh);
+  margin-top: 8px;
 }
+
 .wireWindow {
   position: absolute;
-  border-radius: 18px;
+  right: 0;
+  top: 0;
+  width: 62%;
+  height: 72%;
+  border-radius: 20px;
   background: #ffffff;
-  box-shadow: 0 24px 60px -28px rgba(76, 29, 149, 0.4);
-  border: 1px solid rgba(124, 58, 237, 0.08);
+  box-shadow: 0 26px 64px -30px rgba(76, 29, 149, 0.42);
+  border: 1px solid rgba(124, 58, 237, 0.07);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.wireBack {
-  right: 4%;
-  top: 8%;
-  width: 58%;
-  height: 82%;
-  opacity: 0.85;
-  padding: 18px;
+.wireBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .wireDots {
   display: flex;
   gap: 6px;
-  margin-bottom: 16px;
 }
 .wireDots span {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #e4dcfa;
+  background: #e6dffb;
+}
+.wirePills {
+  display: flex;
+  gap: 6px;
+}
+.wirePills span {
+  width: 18px;
+  height: 7px;
+  border-radius: 4px;
+  background: #e6dffb;
+}
+
+/* the "selected object" — marquee with corner handles.
+   min-height: 0 lets it shrink below the artwork's intrinsic height, and the
+   svg fits via preserveAspectRatio instead of overflowing the canvas. */
+.selection {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 4% 4%;
+  border: 1px solid rgba(124, 58, 237, 0.45);
 }
 .imgPlaceholder {
-  height: 56%;
-  border-radius: 12px;
-  background: linear-gradient(160deg, #efe9fd, #e3d9fb);
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 14px;
-  margin-bottom: 14px;
+  padding: 8%;
+  overflow: hidden;
 }
-.wireLine {
-  height: 9px;
-  border-radius: 6px;
-  background: #ece7fa;
-  margin-top: 9px;
+.imgPlaceholder svg {
+  width: 100%;
+  height: 100%;
 }
-.wireLine.short {
-  width: 55%;
-}
-
-.heroTile {
+.handle {
   position: absolute;
-  left: 14%;
-  top: 24%;
-  width: 30%;
-  aspect-ratio: 1;
-  border-radius: 22px;
+  width: 8px;
+  height: 8px;
   background: #ffffff;
-  box-shadow: 0 30px 70px -26px rgba(76, 29, 149, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1.5px solid var(--purple-light);
+  border-radius: 2px;
 }
+.hTl { left: -4px; top: -4px; }
+.hTr { right: -4px; top: -4px; }
+.hBl { left: -4px; bottom: -4px; }
+.hBr { right: -4px; bottom: -4px; }
+
+.miniCards {
+  position: absolute;
+  right: 4%;
+  bottom: 0;
+  width: 58%;
+  height: 24%;
+  display: flex;
+  gap: 5%;
+}
+.miniCard {
+  flex: 1;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px -26px rgba(76, 29, 149, 0.4);
+  padding: 0 12%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+}
+.miniLine {
+  height: 8px;
+  border-radius: 5px;
+  background: #ece7fa;
+}
+.miniShort { width: 58%; }
+
 .toolRail {
   position: absolute;
-  left: 2%;
-  top: 20%;
-  width: 46px;
-  padding: 14px 0;
+  left: 1%;
+  top: 12%;
+  height: 74%;
+  width: 44px;
+  padding: 12px 0;
   border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 20px 50px -24px rgba(76, 29, 149, 0.45);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  justify-content: space-around;
   color: #b6abd6;
 }
 .toolRail svg {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
+}
+.railDots {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+.railDots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ddd5f5;
 }
 
-.floatSpark {
+.heroTile {
   position: absolute;
-  filter: drop-shadow(0 8px 14px rgba(124, 58, 237, 0.25));
+  left: 13%;
+  top: 20%;
+  height: 56%;
+  aspect-ratio: 1;
+  border-radius: 26px;
+  background: #ffffff;
+  box-shadow: 0 30px 70px -26px rgba(76, 29, 149, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.floatSpark.s1 { top: -6%; right: 30%; width: 30px; }
-.floatSpark.s2 { top: 30%; right: 8%; width: 40px; }
+.heroTile svg {
+  width: 62%;
+  height: auto;
+}
 
 /* ---------------- RIGHT — form panel ---------------- */
 .right {
-  flex: 1 1 54%;
+  flex: 1 1 52%;
   min-width: 0;
-  margin: 14px;
-  border-radius: 28px;
+  margin: 50px;
+  border-radius: 24px;
   background: #ffffff;
   box-shadow: 0 40px 90px -40px rgba(58, 30, 120, 0.35);
   display: flex;
   flex-direction: column;
-  padding: clamp(28px, 3.5vw, 48px);
+  padding: clamp(16px, 1.8vw, 26px);
+  position: relative;
+  /* Clips the decorative sparkles to the rounded corners; the form itself
+     scrolls inside .formWrap so a short viewport never truncates it. */
+  overflow: hidden;
+}
+
+/* decorative sparkles that only appear in the phone layout */
+.mobileSpark {
+  display: none;
+  position: absolute;
+  pointer-events: none;
 }
 
 .langRow {
@@ -192,48 +310,130 @@
   border: 1px solid var(--field-border);
   background: #fff;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+.langBtn:hover:not(:disabled) { border-color: #d6d1e8; background: #fcfbff; }
+
+.langWrap {
+  position: relative;
+}
+.langMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 5;
+  min-width: 210px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--field-border);
+  background: #fff;
+  box-shadow: 0 24px 60px -24px rgba(58, 30, 120, 0.35);
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #ded9ee transparent;
+}
+.langItem {
+  border: none;
+  background: none;
+  text-align: start;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.langItem:hover:not(:disabled) {
+  background: #f4f0fd;
+  border-color: transparent;
+}
+.langItemActive {
+  color: var(--purple-light);
+  font-weight: 600;
 }
 
 .formWrap {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  overflow-y: auto;
+  /* Only shows on short windows; keep it discreet inside the white card. */
+  scrollbar-width: thin;
+  scrollbar-color: #ded9ee transparent;
 }
 .form {
-  width: 100%;
-  max-width: 430px;
+  width: 80%;
+  /* Auto margins centre the form but, unlike justify-content: center, they
+     collapse when it overflows — so the top stays scrollable, not clipped. */
+  margin: auto 0;
+  padding: 10px 0;
+}
+
+/* the phone-only lockup above the form */
+.mobileBrand {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 30px;
+  text-align: center;
 }
 
 .title {
   font-family: var(--serif);
-  font-size: clamp(26px, 2.6vw, 33px);
+  font-size: clamp(23px, 2vw, 29px);
   font-weight: 700;
   letter-spacing: -0.01em;
+  margin: 0;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 7px;
   white-space: nowrap;
+}
+.titleSpark {
+  display: inline-flex;
+  margin-top: 1px;
 }
 .lead {
   color: var(--muted);
-  font-size: 15.5px;
-  margin: 12px 0 32px;
+  font-size: 14px;
+  margin: 10px 0 26px;
   line-height: 1.5;
 }
 
 .field {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  min-width: 0;
+}
+/* First/last name sit side by side; they stack on narrow panels. */
+.row {
+  display: flex;
+  gap: 14px;
+}
+.row .field {
+  flex: 1 1 0;
 }
 .label {
-  display: block;
-  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13.5px;
   font-weight: 600;
-  margin-bottom: 9px;
+  margin-bottom: 8px;
+}
+.optional {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
 }
 .inputWrap {
   position: relative;
@@ -242,24 +442,45 @@
 }
 .inputIcon {
   position: absolute;
-  left: 16px;
+  /* Logical inset so Arabic and Farsi mirror the icon with the text. */
+  inset-inline-start: 15px;
   color: #9aa0ac;
   display: flex;
+  pointer-events: none;
 }
-.inputIcon svg { width: 18px; height: 18px; }
+.inputIcon svg { width: 17px; height: 17px; }
 .input {
   width: 100%;
-  height: 54px;
-  border-radius: 14px;
+  height: 50px;
+  border-radius: 12px;
   border: 1px solid var(--field-border);
-  background: #fbfbfd;
-  padding: 0 48px;
-  font-size: 15.5px;
+  background: #fcfcfe;
+  padding: 0 46px;
+  font-size: 14.5px;
+  font-family: inherit;
   color: var(--ink);
   outline: none;
-  transition: border-color 0.18s, box-shadow 0.18s;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
 }
 .input::placeholder { color: #a6acb8; }
+/* The gender picker reuses the input shell; only the native chrome differs. */
+.select {
+  appearance: none;
+  padding-inline-end: 42px;
+  cursor: pointer;
+}
+.select:invalid,
+.select option[value=''] {
+  color: #a6acb8;
+}
+.selectChevron {
+  position: absolute;
+  inset-inline-end: 16px;
+  display: flex;
+  color: #9aa0ac;
+  pointer-events: none;
+}
+.selectChevron svg { width: 16px; height: 16px; }
 .input:focus {
   border-color: var(--purple-light);
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
@@ -267,7 +488,7 @@
 }
 .eyeBtn {
   position: absolute;
-  right: 14px;
+  inset-inline-end: 15px;
   background: none;
   border: none;
   color: #9aa0ac;
@@ -275,34 +496,46 @@
   display: flex;
   padding: 4px;
 }
-.eyeBtn svg { width: 19px; height: 19px; }
+.eyeBtn:hover:not(:disabled) {
+  background: none;
+  border-color: transparent;
+  color: var(--ink);
+}
+.eyeBtn svg { width: 18px; height: 18px; }
 
 .forgotRow {
   display: flex;
   justify-content: flex-end;
-  margin: -6px 0 22px;
+  margin: -2px 0 22px;
 }
 .link {
   color: var(--purple-light);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
+  font-family: inherit;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   text-decoration: none;
 }
-.link:hover { text-decoration: underline; }
+/* Text links are <button>s, so the same global hover would paint a grey block
+   behind them. */
+.link:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+}
 
 .submit {
   width: 100%;
-  height: 56px;
+  height: 52px;
   border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed, #6c2eed);
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -311,13 +544,16 @@
   box-shadow: 0 18px 34px -14px rgba(109, 40, 217, 0.6);
   transition: transform 0.14s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.14s, opacity 0.14s;
 }
+/* `button:hover:not(:disabled)` in styles/primitives.css sets a grey fill and
+   outranks the base `.submit` rule, so every hover here must restate its own
+   background — otherwise the button washes out to near-white. */
 .submit:hover:not(:disabled) {
+  background: #c084fc;
   transform: translateY(-1px);
   box-shadow: 0 22px 40px -14px rgba(109, 40, 217, 0.7);
 }
 .submit:active:not(:disabled) { transform: translateY(0); }
 .submit:disabled { opacity: 0.65; cursor: default; }
-.submit svg { width: 18px; height: 18px; }
 
 .spinner {
   width: 18px;
@@ -332,12 +568,12 @@
 .divider {
   height: 1px;
   background: var(--field-border);
-  margin: 30px 0;
+  margin: 26px 0;
 }
 .switchRow {
   text-align: center;
   color: var(--muted);
-  font-size: 14.5px;
+  font-size: 13.5px;
 }
 
 .alert {
@@ -363,8 +599,68 @@
   border: 1px solid #fde68a;
 }
 
-/* ---------------- responsive ---------------- */
+/* ---------------- responsive ----------------
+   Below 900px the hero column drops out, so the form panel takes over the
+   whole screen and grows its own centred brand lockup (mock: phone layout). */
 @media (max-width: 900px) {
   .left { display: none; }
-  .right { flex-basis: 100%; margin: 0; border-radius: 0; }
+
+  .right {
+    flex-basis: 100%;
+    margin: 0;
+    border-radius: 0;
+    padding: 20px 26px 32px;
+    background: linear-gradient(180deg, #e9e0fb 0%, #f7f4fe 26%, #ffffff 52%);
+    box-shadow: none;
+    /* Phones scroll the whole panel — brand lockup included — rather than an
+       inner pane, so the gradient header scrolls away naturally. */
+    overflow-y: auto;
+  }
+  .formWrap { overflow: visible; }
+  .form { margin: 0; padding: 0; }
+
+  .mobileSpark { display: block; }
+  .ms1 { top: 9%; left: 12%; }
+  .ms2 { top: 16%; right: 11%; }
+
+  .langBtn {
+    background: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+    padding: 11px 16px;
+    border-radius: 14px;
+  }
+
+  /* Touch targets keep their full size — only the desktop layout shrinks. */
+  .form { max-width: 430px; }
+  .label { font-size: 14.5px; margin-bottom: 9px; }
+  .input { height: 56px; border-radius: 14px; font-size: 15.5px; padding: 0 50px; }
+  .inputIcon { left: 17px; }
+  .inputIcon svg { width: 19px; height: 19px; }
+  .eyeBtn svg { width: 20px; height: 20px; }
+  .lead { font-size: 15.5px; margin: 12px 0 30px; }
+  .link { font-size: 14.5px; }
+  .switchRow { font-size: 14.5px; }
+  .submit { height: 58px; border-radius: 14px; font-size: 16.5px; gap: 12px; }
+  /* Two name inputs side by side get too cramped on a phone. */
+  .row { flex-direction: column; gap: 0; }
+
+  .formWrap { justify-content: flex-start; padding-top: 8px; }
+
+  .mobileBrand { display: flex; }
+  .mobileBrand .brandName { font-size: 44px; margin-top: 6px; }
+  .mobileBrand .brandTagline { font-size: 16px; margin-top: 8px; }
+
+  /* the phone mock sets the greeting in the UI sans, not the display serif */
+  .title {
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    font-family: inherit;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+  }
+  .titleSpark { display: none; }
+  .lead { text-align: center; }
+
+  .submit { margin-top: 10px; }
 }

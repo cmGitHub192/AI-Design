@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { Manrope } from 'next/font/google';
+import { Fraunces, Manrope } from 'next/font/google';
 import { I18nProvider } from '../src/i18n';
 import { AnalyticsProvider } from '../src/analytics/provider';
 import '@excalidraw/excalidraw/index.css';
@@ -19,6 +19,16 @@ const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-manrope',
+});
+
+/**
+ * Disenia's display serif — the wordmark and the marketing headlines on the
+ * auth screen. Same self-hosted delivery rationale as Manrope above.
+ */
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-fraunces',
 });
 
 export const metadata: Metadata = {
@@ -50,7 +60,7 @@ const themeInitScript = `(function(){try{var c=JSON.parse(localStorage.getItem('
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang='en' className={manrope.variable} suppressHydrationWarning>
+    <html lang='en' className={`${manrope.variable} ${fraunces.variable}`} suppressHydrationWarning>
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: intentional theme-init inline script to prevent FOUC */}
