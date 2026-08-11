@@ -4246,5 +4246,14 @@ export const id: Dict = {
   'login.notice.resetSent': 'Jika email tersebut ada, kami telah mengirim tautan untuk mengatur ulang kata sandi.',
   'login.notice.accountCreated': 'Akun dibuat. Periksa email Anda untuk mengonfirmasi, lalu masuk.',
   'login.supabaseMissing': 'Supabase belum terhubung. Tambahkan kunci Anda di {file} untuk mengaktifkan login.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'Email dikonfirmasi',
+  'login.confirm.subtitle': 'Akun Anda siap. Masuk untuk memulai.',
+  'login.confirm.failed': 'Kami tidak dapat mengonfirmasi email Anda. Tautan mungkin sudah kedaluwarsa.',
+  'login.reset.newTitle': 'Pilih kata sandi baru',
+  'login.reset.newSubtitle': 'Pilih kata sandi yang belum pernah Anda gunakan.',
+  'login.reset.save': 'Simpan kata sandi',
+  'login.reset.done': 'Kata sandi Anda diperbarui. Anda bisa masuk sekarang.',
+  'login.reset.invalidLink': 'Tautan ini tidak valid atau sudah kedaluwarsa. Minta yang baru.',
 
 };

@@ -4246,5 +4246,14 @@ export const de: Dict = {
   'login.notice.resetSent': 'Falls die E-Mail existiert, haben wir einen Link zum Zurücksetzen des Passworts gesendet.',
   'login.notice.accountCreated': 'Konto erstellt. Bestätige es über deine E-Mail und melde dich dann an.',
   'login.supabaseMissing': 'Supabase ist noch nicht verbunden. Füge deine Schlüssel in {file} hinzu, um die Anmeldung zu aktivieren.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'E-Mail bestätigt',
+  'login.confirm.subtitle': 'Dein Konto ist bereit. Melde dich an, um loszulegen.',
+  'login.confirm.failed': 'Wir konnten deine E-Mail nicht bestätigen. Der Link ist möglicherweise abgelaufen.',
+  'login.reset.newTitle': 'Neues Passwort wählen',
+  'login.reset.newSubtitle': 'Wähle ein Passwort, das du noch nicht verwendet hast.',
+  'login.reset.save': 'Passwort speichern',
+  'login.reset.done': 'Dein Passwort wurde aktualisiert. Du kannst dich jetzt anmelden.',
+  'login.reset.invalidLink': 'Dieser Link ist ungültig oder abgelaufen. Fordere einen neuen an.',
 
 };

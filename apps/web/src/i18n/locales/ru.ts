@@ -4246,5 +4246,14 @@ export const ru: Dict = {
   'login.notice.resetSent': 'Если такая почта существует, мы отправили ссылку для сброса пароля.',
   'login.notice.accountCreated': 'Аккаунт создан. Подтвердите его по ссылке в письме и войдите.',
   'login.supabaseMissing': 'Supabase ещё не подключён. Добавьте ключи в {file}, чтобы включить вход.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'Почта подтверждена',
+  'login.confirm.subtitle': 'Аккаунт готов. Войдите, чтобы начать.',
+  'login.confirm.failed': 'Не удалось подтвердить почту. Возможно, ссылка устарела.',
+  'login.reset.newTitle': 'Придумайте новый пароль',
+  'login.reset.newSubtitle': 'Выберите пароль, который вы ещё не использовали.',
+  'login.reset.save': 'Сохранить пароль',
+  'login.reset.done': 'Пароль обновлён. Теперь вы можете войти.',
+  'login.reset.invalidLink': 'Ссылка недействительна или устарела. Запросите новую.',
 
 };

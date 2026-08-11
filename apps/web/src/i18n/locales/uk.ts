@@ -4246,5 +4246,14 @@ export const uk: Dict = {
   'login.notice.resetSent': 'Якщо така пошта існує, ми надіслали посилання для скидання пароля.',
   'login.notice.accountCreated': 'Акаунт створено. Підтвердьте його з листа та увійдіть.',
   'login.supabaseMissing': 'Supabase ще не підключено. Додайте ключі у {file}, щоб увімкнути вхід.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'Пошту підтверджено',
+  'login.confirm.subtitle': 'Обліковий запис готовий. Увійдіть, щоб почати.',
+  'login.confirm.failed': 'Не вдалося підтвердити пошту. Можливо, посилання застаріло.',
+  'login.reset.newTitle': 'Створіть новий пароль',
+  'login.reset.newSubtitle': 'Оберіть пароль, яким ви ще не користувалися.',
+  'login.reset.save': 'Зберегти пароль',
+  'login.reset.done': 'Пароль оновлено. Тепер ви можете увійти.',
+  'login.reset.invalidLink': 'Це посилання недійсне або застаріло. Запросіть нове.',
 
 };

@@ -4246,5 +4246,14 @@ export const hu: Dict = {
   'login.notice.resetSent': 'Ha az e-mail létezik, küldtünk egy linket a jelszó visszaállításához.',
   'login.notice.accountCreated': 'Fiók létrehozva. Erősítsd meg az e-mailedben, majd jelentkezz be.',
   'login.supabaseMissing': 'A Supabase még nincs csatlakoztatva. Add meg a kulcsaidat itt: {file}, hogy működjön a bejelentkezés.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'E-mail megerősítve',
+  'login.confirm.subtitle': 'A fiókod készen áll. Jelentkezz be a kezdéshez.',
+  'login.confirm.failed': 'Nem sikerült megerősíteni az e-mail-címedet. A hivatkozás lejárhatott.',
+  'login.reset.newTitle': 'Válassz új jelszót',
+  'login.reset.newSubtitle': 'Olyan jelszót válassz, amelyet még nem használtál.',
+  'login.reset.save': 'Jelszó mentése',
+  'login.reset.done': 'A jelszavad frissült. Most már bejelentkezhetsz.',
+  'login.reset.invalidLink': 'Ez a hivatkozás érvénytelen vagy lejárt. Kérj újat.',
 
 };

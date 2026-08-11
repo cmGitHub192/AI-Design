@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 
 import { installErrorHandlers } from '../../src/analytics/error-tracking';
+import { AuthGate } from '../../src/auth/AuthGate';
+import { installAuthFetch } from '../../src/auth/install-auth-fetch';
 import { installWebObservability } from '../../src/observability/install';
 
 // Install browser exception handlers at module-load time, before any other
@@ -17,6 +19,11 @@ installErrorHandlers();
 // so events fired before AnalyticsProvider initialises still flush.
 installWebObservability();
 
+// Stamp the Supabase access token onto daemon API calls. Must run before the
+// app tree mounts and starts fetching, otherwise the first wave of requests
+// goes out unauthenticated and 401s when OD_REQUIRE_AUTH is on.
+installAuthFetch();
+
 // The product is a fully client-driven SPA — every component reads
 // localStorage, window.location, etc. — so we opt out of static-time
 // rendering for the entire tree. This keeps `next build --output export`
@@ -28,5 +35,11 @@ const App = dynamic(() => import('../../src/App').then((m) => m.App), {
 });
 
 export function ClientApp() {
-  return <App />;
+  // AuthGate wraps the dynamic import so a signed-out visitor never even
+  // downloads-and-mounts the product tree before being sent to /login.
+  return (
+    <AuthGate>
+      <App />
+    </AuthGate>
+  );
 }

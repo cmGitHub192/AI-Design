@@ -4246,5 +4246,14 @@ export const it: Dict = {
   'login.notice.resetSent': 'Se l’email esiste, abbiamo inviato un link per reimpostare la password.',
   'login.notice.accountCreated': 'Account creato. Controlla l’email per confermarlo e poi accedi.',
   'login.supabaseMissing': 'Supabase non è ancora collegato. Aggiungi le tue chiavi in {file} per attivare il login.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'Email confermata',
+  'login.confirm.subtitle': 'Il tuo account è pronto. Accedi per iniziare.',
+  'login.confirm.failed': 'Non siamo riusciti a confermare la tua email. Il link potrebbe essere scaduto.',
+  'login.reset.newTitle': 'Scegli una nuova password',
+  'login.reset.newSubtitle': 'Scegli una password che non hai mai usato.',
+  'login.reset.save': 'Salva password',
+  'login.reset.done': 'La tua password è stata aggiornata. Ora puoi accedere.',
+  'login.reset.invalidLink': 'Questo link non è valido o è scaduto. Richiedine uno nuovo.',
 
 };

@@ -8,7 +8,9 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react';
+import { persistSession } from '../../src/auth/session';
 import { LOCALE_LABEL, LOCALES, useI18n, type Locale } from '../../src/i18n';
+import { Mark, Spark } from './brand-marks';
 import styles from './login.module.css';
 
 /**
@@ -16,8 +18,9 @@ import styles from './login.module.css';
  *
  * Talks to Supabase Auth (GoTrue) directly over its REST API with `fetch`, so
  * it needs no npm package (the workspace currently can't resolve new deps). The
- * session (access + refresh token) is stored client-side; app-wide gating and
- * daemon-side userId scoping are the next phase.
+ * session is written through `src/auth/session.ts`, which is also what
+ * `AuthGate` reads to keep the SPA behind this screen; daemon-side userId
+ * scoping is the next phase.
  *
  * Copy comes from the shared `login.*` dictionary, so the screen follows the
  * app-wide locale and the picker here switches the whole app, not just this
@@ -33,66 +36,37 @@ const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON);
 const ENV_FILE = 'apps/web/.env.local';
 
-const SESSION_KEY = 'disenia.session';
 const MIN_PASSWORD = 8;
 
+/**
+ * Where to land after a successful sign-in.
+ *
+ * `AuthGate` appends `?next=<path>` when it bounces a deep link, so a user who
+ * opened a project URL while signed out ends up back on that project instead of
+ * the home screen. Anything that is not a same-origin path is discarded — this
+ * value goes straight into `location.assign`.
+ */
+/**
+ * Absolute URL Supabase should send the user back to from an email link.
+ *
+ * Supabase only honours this when the URL is listed under Authentication → URL
+ * Configuration → Redirect URLs; an unlisted value silently falls back to the
+ * project's Site URL, which is why a misconfigured project sends people to the
+ * home screen instead of these pages.
+ */
+function emailLinkTarget(path: string): string {
+  if (typeof window === 'undefined') return path;
+  return `${window.location.origin}${path}`;
+}
+
+function redirectTarget(): string {
+  if (typeof window === 'undefined') return '/';
+  const next = new URLSearchParams(window.location.search).get('next');
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return '/';
+  return next;
+}
+
 type Mode = 'signin' | 'signup' | 'reset';
-
-/** Outer four-pointed star of the Disenia mark (source: Disenia logo.svg). */
-const MARK_STAR =
-  'M67.1689 15.749C73.2539 26.8232 79.6042 36.057 87.5859 44.2852C95.728 52.6786 105.345 59.7999 117.649 66.8125C105.829 73.1701 96.2274 79.7532 88 87.8711C79.9035 95.8599 73.3703 105.104 67.3037 116.594C60.1244 103.547 52.8202 93.6112 44.2432 85.4678C36.7048 78.3106 28.3845 72.7329 18.7422 67.6387C28.4108 62.8354 36.4087 56.7844 43.6797 49.0615C52.067 40.1529 59.3589 29.1365 67.1689 15.749Z';
-
-/** Amber core nested inside the star. */
-const MARK_CORE =
-  'M43 67.0824C54.5426 71.8461 60.1175 76.0247 66.6754 89C72.1848 77.2623 77.4923 72.6327 90 67.0824C77.064 61.0326 72.334 55.9388 66.6754 45C59.2244 57.5543 54.6312 63.6863 43 67.0824Z';
-
-/**
- * The Disenia logo, exactly as authored in `Disenia logo.svg`: white star,
- * vertical purple gradient outline, amber core.
- *
- * The gradient id is per-instance (`useId`) because several marks share the
- * document and duplicated ids would cross-reference.
- */
-function Mark({ size = 40 }: { size?: number }): ReactNode {
-  const gradientId = `disenia-mark-${useId()}`;
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 134 134"
-      fill="none"
-      aria-hidden="true"
-      className={styles.sparkle}
-    >
-      <defs>
-        <linearGradient id={gradientId} x1="67" y1="0" x2="67" y2="133.5" gradientUnits="userSpaceOnUse">
-          <stop offset="0.560928" stopColor="#6C2EED" />
-          <stop offset="1" stopColor="#1A0643" />
-        </linearGradient>
-      </defs>
-      <path d={MARK_STAR} fill="white" stroke={`url(#${gradientId})`} strokeWidth="15" />
-      <path d={MARK_CORE} fill="#F9D265" />
-    </svg>
-  );
-}
-
-/**
- * Decorative sparkle — ornament, not the logo.
- *
- * The real mark carries a 15-unit outline that collapses into a blob below
- * ~40px, so the floating accents and the in-button glyph use this slim star
- * instead. Anywhere the brand is actually being *identified*, use `Mark`.
- */
-function Spark({ size = 24, color = '#6c2eed' }: { size?: number; color?: string }): ReactNode {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" className={styles.sparkle}>
-      <path
-        d="M50 2 C54 33 67 46 98 50 C67 54 54 67 50 98 C46 67 33 54 2 50 C33 46 46 33 50 2Z"
-        fill={color}
-      />
-    </svg>
-  );
-}
 
 /**
  * Renders the hero headline, emphasising the fragment each translation wraps
@@ -316,11 +290,15 @@ export default function LoginScreen(): ReactNode {
     setNotice(null);
     try {
       if (mode === 'reset') {
-        await gotrue('recover', { email }, t('login.error.unexpected'));
+        await gotrue(
+          `recover?redirect_to=${encodeURIComponent(emailLinkTarget('/auth/reset'))}`,
+          { email },
+          t('login.error.unexpected'),
+        );
         setNotice(t('login.notice.resetSent'));
       } else if (mode === 'signup') {
         const data = await gotrue(
-          'signup',
+          `signup?redirect_to=${encodeURIComponent(emailLinkTarget('/auth/confirm'))}`,
           {
             email,
             password,
@@ -340,7 +318,7 @@ export default function LoginScreen(): ReactNode {
         );
         if (data.access_token) {
           persistSession(data);
-          window.location.assign('/');
+          window.location.assign(redirectTarget());
           return;
         }
         // Email confirmation required: drop back to sign-in with the notice
@@ -354,25 +332,13 @@ export default function LoginScreen(): ReactNode {
           t('login.error.unexpected'),
         );
         persistSession(data);
-        window.location.assign('/');
+        window.location.assign(redirectTarget());
         return;
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('login.error.unexpected'));
     } finally {
       setBusy(false);
-    }
-  }
-
-  function persistSession(data: Record<string, any>) {
-    try {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(data));
-    } catch {
-      /* ignore storage errors */
-    }
-    if (data.access_token) {
-      // Readable cookie so the daemon/middleware can pick up the token next phase.
-      document.cookie = `sb-access-token=${data.access_token}; path=/; max-age=${data.expires_in ?? 3600}; SameSite=Lax`;
     }
   }
 

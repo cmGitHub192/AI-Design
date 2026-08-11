@@ -4246,5 +4246,14 @@ export const pl: Dict = {
   'login.notice.resetSent': 'Jeśli ten adres istnieje, wysłaliśmy link do zresetowania hasła.',
   'login.notice.accountCreated': 'Konto utworzone. Potwierdź je w e-mailu, a następnie zaloguj się.',
   'login.supabaseMissing': 'Supabase nie jest jeszcze podłączony. Dodaj swoje klucze w {file}, aby włączyć logowanie.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'E-mail potwierdzony',
+  'login.confirm.subtitle': 'Twoje konto jest gotowe. Zaloguj się, aby zacząć.',
+  'login.confirm.failed': 'Nie udało się potwierdzić adresu e-mail. Link mógł wygasnąć.',
+  'login.reset.newTitle': 'Wybierz nowe hasło',
+  'login.reset.newSubtitle': 'Wybierz hasło, którego wcześniej nie używałeś.',
+  'login.reset.save': 'Zapisz hasło',
+  'login.reset.done': 'Hasło zostało zaktualizowane. Możesz się teraz zalogować.',
+  'login.reset.invalidLink': 'Ten link jest nieprawidłowy lub wygasł. Poproś o nowy.',
 
 };

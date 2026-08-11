@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@open-design/components';
+import { withAccessToken } from '../auth/install-auth-fetch';
 import { Icon, type IconName } from './Icon';
 import { ConnectorLogo, useResolvedTheme } from './ConnectorLogo';
 import { useT } from '../i18n';
@@ -920,7 +921,7 @@ export function MemorySection({
   // so we just always reload on any change. EventSource auto-reconnects
   // on temporary daemon hiccups.
   useEffect(() => {
-    const es = new EventSource('/api/memory/events');
+    const es = new EventSource(withAccessToken('/api/memory/events'));
     es.addEventListener('change', (raw) => {
       try {
         const ev = JSON.parse((raw as MessageEvent).data) as MemoryChangeEvent;

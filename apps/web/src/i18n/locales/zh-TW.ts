@@ -4708,5 +4708,14 @@ export const zhTW: Dict = {
   'login.notice.resetSent': '若該信箱存在，我們已寄出重設密碼的連結。',
   'login.notice.accountCreated': '帳號已建立。請至信箱完成確認後登入。',
   'login.supabaseMissing': 'Supabase 尚未連線。在 {file} 中填入你的金鑰即可啟用登入。',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': '電子郵件已確認',
+  'login.confirm.subtitle': '帳號已就緒，登入即可開始。',
+  'login.confirm.failed': '無法確認你的電子郵件，連結可能已過期。',
+  'login.reset.newTitle': '設定新密碼',
+  'login.reset.newSubtitle': '請選擇一組先前沒用過的密碼。',
+  'login.reset.save': '儲存密碼',
+  'login.reset.done': '密碼已更新，現在可以登入了。',
+  'login.reset.invalidLink': '此連結無效或已過期，請重新索取。',
 
 };

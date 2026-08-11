@@ -141,14 +141,11 @@ obvious, block the PR and request core-maintainer guidance.
 
 ## GitHub automation boundary
 
-Read `.github/AGENTS.md` before editing `.github/workflows/`, `.github/scripts/`, `.github/actions/`, PR follow-on automation, `workflow_run` trusted writes, CI handoff artifacts, or the workflow topology checks that guard those surfaces.
+Read `.github/AGENTS.md` before editing `.github/workflows/`, `.github/scripts/`, `.github/actions/`, or the workflow topology checks that guard those surfaces.
 
-CI-related GitHub automation uses a two-layer architecture:
+`ci.yml` is the only workflow in this repository. It validates pull requests and the merge queue; nothing runs on a schedule. The upstream project's automation fleet (releases, R2/registry publishing, landing-page deploys, Feishu/Discord notifications, community bots, and the `comment`/`autofix`/`report` follow-on capability layer) was removed because it depends on infrastructure this repository does not have and failed on every scheduled run.
 
-- Business layer workflows own product or validation decisions. `ci.yml` is the main low-privilege PR, merge-queue, and manual validation workflow. It detects scope, runs checks, and produces typed handoff artifacts.
-- Atomic capability workflows own reusable trusted operations. `comment.atom.yml` publishes pure text PR comments, `autofix.atom.yml` applies same-repository patches, and `report.atom.yml` materializes advanced comments that need trusted dependencies, secrets, or report generation before upsert.
-
-Do not add a new business-named follow-on workflow such as `foo.comment.atom.yml` or `bar.autofix.atom.yml` without first trying to express the flow as a `ci.yml` producer plus the existing `comment`, `autofix`, or `report` capability. Keep artifact naming, storage layout, and parser behavior centralized in `.github/scripts/handoff.py`; do not let individual workflows invent parallel handoff conventions.
+Prefer adding a job to `ci.yml` over creating a new workflow. Anything added on a `schedule:` trigger emails the repository owner on every failure.
 
 ## Release channel model
 

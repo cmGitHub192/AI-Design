@@ -4246,5 +4246,14 @@ export const esES: Dict = {
   'login.notice.resetSent': 'Si el correo existe, te enviamos un enlace para restablecer la contraseña.',
   'login.notice.accountCreated': 'Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.',
   'login.supabaseMissing': 'Supabase todavía no está conectado. Añade tus claves en {file} para activar el login.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'Correo confirmado',
+  'login.confirm.subtitle': 'Tu cuenta está lista. Inicia sesión para empezar.',
+  'login.confirm.failed': 'No pudimos confirmar tu correo. Es posible que el enlace haya caducado.',
+  'login.reset.newTitle': 'Elige una contraseña nueva',
+  'login.reset.newSubtitle': 'Escoge una contraseña que no hayas usado antes.',
+  'login.reset.save': 'Guardar contraseña',
+  'login.reset.done': 'Tu contraseña se actualizó. Ya puedes iniciar sesión.',
+  'login.reset.invalidLink': 'Este enlace no es válido o ya caducó. Pide uno nuevo.',
 
 };

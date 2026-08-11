@@ -4260,5 +4260,14 @@ export const en: Dict = {
   'login.notice.resetSent': 'If that email exists, we have sent a link to reset the password.',
   'login.notice.accountCreated': 'Account created. Check your email to confirm it, then sign in.',
   'login.supabaseMissing': 'Supabase is not connected yet. Add your keys in {file} to enable login.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'Email confirmed',
+  'login.confirm.subtitle': 'Your account is ready. Sign in to get started.',
+  'login.confirm.failed': 'We could not confirm your email. The link may have expired.',
+  'login.reset.newTitle': 'Choose a new password',
+  'login.reset.newSubtitle': 'Pick a password you have not used before.',
+  'login.reset.save': 'Save password',
+  'login.reset.done': 'Your password was updated. You can sign in now.',
+  'login.reset.invalidLink': 'This link is invalid or has expired. Request a new one.',
 
 };

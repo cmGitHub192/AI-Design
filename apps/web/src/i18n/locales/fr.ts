@@ -4246,5 +4246,14 @@ export const fr: Dict = {
   'login.notice.resetSent': 'Si cette adresse existe, nous avons envoyé un lien pour réinitialiser le mot de passe.',
   'login.notice.accountCreated': 'Compte créé. Confirmez-le depuis votre e-mail, puis connectez-vous.',
   'login.supabaseMissing': 'Supabase n’est pas encore connecté. Ajoutez vos clés dans {file} pour activer la connexion.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'E-mail confirmé',
+  'login.confirm.subtitle': 'Votre compte est prêt. Connectez-vous pour commencer.',
+  'login.confirm.failed': 'Nous n’avons pas pu confirmer votre e-mail. Le lien a peut-être expiré.',
+  'login.reset.newTitle': 'Choisissez un nouveau mot de passe',
+  'login.reset.newSubtitle': 'Choisissez un mot de passe que vous n’avez jamais utilisé.',
+  'login.reset.save': 'Enregistrer le mot de passe',
+  'login.reset.done': 'Votre mot de passe a été mis à jour. Vous pouvez vous connecter.',
+  'login.reset.invalidLink': 'Ce lien est invalide ou a expiré. Demandez-en un nouveau.',
 
 };

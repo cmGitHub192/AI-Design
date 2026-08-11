@@ -4700,5 +4700,14 @@ export const zhCN: Dict = {
   'login.notice.resetSent': '如果该邮箱存在，我们已发送重置密码的链接。',
   'login.notice.accountCreated': '账户已创建。请查收邮件完成确认，然后登录。',
   'login.supabaseMissing': 'Supabase 尚未连接。在 {file} 中填入你的密钥即可启用登录。',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': '邮箱已确认',
+  'login.confirm.subtitle': '账号已就绪，登录即可开始。',
+  'login.confirm.failed': '无法确认你的邮箱，链接可能已过期。',
+  'login.reset.newTitle': '设置新密码',
+  'login.reset.newSubtitle': '请选择一个此前没用过的密码。',
+  'login.reset.save': '保存密码',
+  'login.reset.done': '密码已更新，现在可以登录了。',
+  'login.reset.invalidLink': '此链接无效或已过期，请重新获取。',
 
 };

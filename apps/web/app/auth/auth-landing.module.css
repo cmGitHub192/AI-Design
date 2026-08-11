@@ -1,0 +1,57 @@
+/* Layout overrides for the email-link landing pages.
+ *
+ * These reuse login.module.css for typography, fields and buttons, but not its
+ * geometry: `.right` there is one half of a two-column split (`flex: 1 1 52%`
+ * with a 50px margin), which stretches to the full window when it is the only
+ * column. Here the card is the whole page, so it gets its own size and
+ * centring — everything else still comes from the login stylesheet.
+ */
+
+.card {
+  flex: 0 1 auto;
+  width: min(460px, 100% - 32px);
+  margin: auto;
+  padding: clamp(28px, 4vw, 40px) clamp(20px, 3vw, 32px);
+}
+
+/* Vertically centre the content instead of letting it hang from the top: these
+ * pages hold a few lines, not a nine-field form. */
+.body {
+  flex: 0 1 auto;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+/* The login form is 80% wide inside a half-width card; at this width that
+ * leaves the fields floating with odd side gutters. */
+.body form {
+  width: 100%;
+}
+
+/* The login titles are short ("Bienvenido de nuevo") and fit on one line, so
+ * that stylesheet sets `white-space: nowrap`. These titles are sentences and
+ * the card is narrower — without this they overflow and get clipped. */
+.body h2 {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
+  font-size: clamp(21px, 2.4vw, 26px);
+  line-height: 1.25;
+}
+
+.body p {
+  text-align: center;
+}
+
+/* `.submit` is a <button> in the login form and an <a> here, so it needs the
+ * anchor bits the shared rule does not carry. */
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 22px;
+  text-decoration: none;
+}

@@ -4246,5 +4246,14 @@ export const tr: Dict = {
   'login.notice.resetSent': 'Bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı gönderdik.',
   'login.notice.accountCreated': 'Hesap oluşturuldu. E-postanızdan onaylayın, ardından giriş yapın.',
   'login.supabaseMissing': 'Supabase henüz bağlı değil. Girişi etkinleştirmek için anahtarlarınızı {file} dosyasına ekleyin.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'E-posta doğrulandı',
+  'login.confirm.subtitle': 'Hesabın hazır. Başlamak için giriş yap.',
+  'login.confirm.failed': 'E-postanı doğrulayamadık. Bağlantının süresi dolmuş olabilir.',
+  'login.reset.newTitle': 'Yeni bir parola seç',
+  'login.reset.newSubtitle': 'Daha önce kullanmadığın bir parola seç.',
+  'login.reset.save': 'Parolayı kaydet',
+  'login.reset.done': 'Parolan güncellendi. Artık giriş yapabilirsin.',
+  'login.reset.invalidLink': 'Bu bağlantı geçersiz veya süresi dolmuş. Yenisini iste.',
 
 };

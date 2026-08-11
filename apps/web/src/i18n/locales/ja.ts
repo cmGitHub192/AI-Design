@@ -4246,5 +4246,14 @@ export const ja: Dict = {
   'login.notice.resetSent': 'そのメールアドレスが存在する場合、パスワード再設定用のリンクを送信しました。',
   'login.notice.accountCreated': 'アカウントを作成しました。メールで確認してからログインしてください。',
   'login.supabaseMissing': 'Supabase がまだ接続されていません。{file} にキーを追加するとログインを有効にできます。',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'メールを確認しました',
+  'login.confirm.subtitle': 'アカウントの準備ができました。ログインして始めましょう。',
+  'login.confirm.failed': 'メールを確認できませんでした。リンクの有効期限が切れている可能性があります。',
+  'login.reset.newTitle': '新しいパスワードを設定',
+  'login.reset.newSubtitle': 'これまでに使ったことのないパスワードを選んでください。',
+  'login.reset.save': 'パスワードを保存',
+  'login.reset.done': 'パスワードを更新しました。ログインできます。',
+  'login.reset.invalidLink': 'このリンクは無効か、有効期限が切れています。新しいリンクを取得してください。',
 
 };

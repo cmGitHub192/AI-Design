@@ -4246,5 +4246,14 @@ export const ptBR: Dict = {
   'login.notice.resetSent': 'Se o e-mail existir, enviamos um link para redefinir a senha.',
   'login.notice.accountCreated': 'Conta criada. Confira seu e-mail para confirmá-la e depois entre.',
   'login.supabaseMissing': 'O Supabase ainda não está conectado. Adicione suas chaves em {file} para ativar o login.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'E-mail confirmado',
+  'login.confirm.subtitle': 'Sua conta está pronta. Faça login para começar.',
+  'login.confirm.failed': 'Não conseguimos confirmar seu e-mail. O link pode ter expirado.',
+  'login.reset.newTitle': 'Escolha uma nova senha',
+  'login.reset.newSubtitle': 'Escolha uma senha que você ainda não usou.',
+  'login.reset.save': 'Salvar senha',
+  'login.reset.done': 'Sua senha foi atualizada. Já pode fazer login.',
+  'login.reset.invalidLink': 'Este link é inválido ou expirou. Solicite um novo.',
 
 };

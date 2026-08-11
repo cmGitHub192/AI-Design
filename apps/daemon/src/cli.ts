@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
+import { installCliAuthFetch } from './cli-auth-fetch.js';
 import { runDaemonCliStartup, startDaemonRuntime } from './daemon-startup.js';
 import { runLiveArtifactsMcpServer } from './mcp-live-artifacts-server.js';
 import { runArtifactsCli } from './artifacts-cli.js';
@@ -26,6 +27,10 @@ import {
   applyJsonInstall,
   removeJsonInstall,
 } from './mcp-agent-install.js';
+
+// Must run before any subcommand issues a daemon request: with
+// OD_REQUIRE_AUTH on, an unstamped request comes back 401.
+installCliAuthFetch();
 
 const argv = process.argv.slice(2);
 

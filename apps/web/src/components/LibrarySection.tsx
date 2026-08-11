@@ -18,6 +18,7 @@
 
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ChatAttachment, DesignSystemSummary, LibraryAsset } from '@open-design/contracts';
+import { withAccessToken } from '../auth/install-auth-fetch';
 import {
   applyLibraryAsset,
   deleteLibraryAsset,
@@ -644,7 +645,7 @@ export function LibrarySection({ active, onOpenProject }: Props) {
     };
 
     try {
-      es = new EventSource('/api/library/events');
+      es = new EventSource(withAccessToken('/api/library/events'));
       const onIngest = (ev: MessageEvent) => {
         const id = parseEventAssetId(ev.data);
         if (id) pendingIngest.add(id);

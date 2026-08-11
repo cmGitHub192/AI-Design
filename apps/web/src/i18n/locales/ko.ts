@@ -4246,5 +4246,14 @@ export const ko: Dict = {
   'login.notice.resetSent': '해당 이메일이 존재하면 비밀번호 재설정 링크를 보냈습니다.',
   'login.notice.accountCreated': '계정이 생성되었습니다. 이메일에서 확인한 뒤 로그인하세요.',
   'login.supabaseMissing': 'Supabase가 아직 연결되지 않았습니다. {file}에 키를 추가하면 로그인이 활성화됩니다.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': '이메일이 확인되었습니다',
+  'login.confirm.subtitle': '계정이 준비되었습니다. 로그인해 시작하세요.',
+  'login.confirm.failed': '이메일을 확인하지 못했습니다. 링크가 만료되었을 수 있습니다.',
+  'login.reset.newTitle': '새 비밀번호 설정',
+  'login.reset.newSubtitle': '이전에 사용하지 않은 비밀번호를 선택하세요.',
+  'login.reset.save': '비밀번호 저장',
+  'login.reset.done': '비밀번호가 변경되었습니다. 이제 로그인할 수 있습니다.',
+  'login.reset.invalidLink': '이 링크는 유효하지 않거나 만료되었습니다. 새 링크를 요청하세요.',
 
 };

@@ -33,6 +33,8 @@ import {
 import type { OpenDesignHostProjectImportSuccess } from '@open-design/host';
 import type { DesignSystemGenerateSnapshot } from './DesignSystemFlow';
 import { useAnalytics } from '../analytics/provider';
+import { signOut } from '../auth/session';
+import { useSessionProfile } from '../auth/useSessionProfile';
 import {
   trackHomeNavClick,
   trackHomeToolbarClick,
@@ -626,6 +628,10 @@ export function EntryShell({
     scrollContainer.scrollTop = 0;
   }, [view]);
   const analytics = useAnalytics();
+  // Signed-in identity for the topbar account menu. Null before the effect runs
+  // and for unauthenticated boots (Supabase not configured), so every read below
+  // has to tolerate it.
+  const sessionProfile = useSessionProfile();
   function changeView(next: EntryViewKind) {
     const navElement = navElementForView(next);
     if (navElement) {
@@ -1074,8 +1080,15 @@ export function EntryShell({
               />
               <WhatsNewPopup active={view === 'home'} />
               <EntryUserMenu
-                userName="Usuario"
+                userName={sessionProfile?.displayName ?? 'Usuario'}
+                userEmail={sessionProfile?.email}
+                idNumber={sessionProfile?.idNumber}
+                phone={sessionProfile?.phone}
+                gender={sessionProfile?.gender}
                 onOpenSettings={onOpenSettings}
+                onSignOut={() => {
+                  void signOut();
+                }}
               />
             </div>
             {amrBalanceGateBlock ? (

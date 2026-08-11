@@ -4246,5 +4246,14 @@ export const ar: Dict = {
   'login.notice.resetSent': 'إذا كان هذا البريد موجوداً، فقد أرسلنا رابطاً لإعادة تعيين كلمة المرور.',
   'login.notice.accountCreated': 'تم إنشاء الحساب. تحقق من بريدك لتأكيده ثم سجّل الدخول.',
   'login.supabaseMissing': 'لم يتم ربط Supabase بعد. أضف مفاتيحك في {file} لتفعيل تسجيل الدخول.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'تم تأكيد البريد الإلكتروني',
+  'login.confirm.subtitle': 'حسابك جاهز. سجّل الدخول للبدء.',
+  'login.confirm.failed': 'تعذّر تأكيد بريدك الإلكتروني. ربما انتهت صلاحية الرابط.',
+  'login.reset.newTitle': 'اختر كلمة مرور جديدة',
+  'login.reset.newSubtitle': 'اختر كلمة مرور لم تستخدمها من قبل.',
+  'login.reset.save': 'حفظ كلمة المرور',
+  'login.reset.done': 'تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.',
+  'login.reset.invalidLink': 'هذا الرابط غير صالح أو منتهي الصلاحية. اطلب رابطًا جديدًا.',
 
 };

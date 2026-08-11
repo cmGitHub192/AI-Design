@@ -677,6 +677,12 @@ import {
 } from './library-tokens.js';
 import { listLibraryTokenOrigins } from './library-store.js';
 import { apiTokenFromEnv, isApiAuthDisabled, isApiTokenMiddlewareEnabled } from './api-token-auth.js';
+import {
+  accessTokenFromRequest,
+  isSupabaseAuthRequired,
+  supabaseAuthConfig,
+  verifyAccessToken,
+} from './supabase-auth.js';
 import { createOpenDesignPublicMetadataService } from './services/open-design-public-metadata.js';
 import { createWhatsNewService } from './services/whats-new.js';
 import { execCommandViaLoginShell } from './services/login-shell.js';
@@ -2101,6 +2107,55 @@ export async function startServer({
         });
       }
       return next();
+    });
+  }
+
+  // Supabase session guard.
+  //
+  // The OD_API_TOKEN middleware above exempts loopback, which is exactly the
+  // path the browser and any other local process use — so it cannot answer
+  // "is a real user signed in?". This one does, and deliberately has NO
+  // loopback bypass: that bypass is the hole it exists to close.
+  //
+  // Two credentials are accepted, because the product has two front doors:
+  //   - a Supabase access token  → the web UI, carrying a signed-in user;
+  //   - OD_API_TOKEN             → the `od` CLI and automation, which have no
+  //                                browser session to draw on.
+  // Dropping the second would silently break every CLI capability the moment
+  // this flag is turned on (see AGENTS.md "Capability exposure").
+  //
+  // Off unless OD_REQUIRE_AUTH is set AND Supabase is configured.
+  if (isSupabaseAuthRequired()) {
+    const authConfig = supabaseAuthConfig();
+    const openProbePaths = new Set(['/health', '/ready', '/version']);
+    console.log(
+      apiToken.length > 0
+        ? '[auth] Supabase session required on /api (OD_API_TOKEN also accepted)'
+        : '[auth] Supabase session required on /api — set OD_API_TOKEN to keep `od` CLI access working',
+    );
+    // `x-od-auth: required` marks OUR rejections. The web client signs the user
+    // out when it sees it, so routes that proxy a third party and return their
+    // 401 verbatim must not be mistaken for an expired session.
+    const rejectAuth = (res, code: string, message: string) =>
+      res.status(401).set('x-od-auth', 'required').json({ error: { code, message } });
+
+    app.use('/api', (req, res, next) => {
+      if (openProbePaths.has(req.path)) return next();
+      const token = accessTokenFromRequest(req);
+      if (!token) return rejectAuth(res, 'AUTH_REQUIRED', 'Sign-in required');
+      // Compare against the machine token first: no network round trip, and it
+      // is what automation presents.
+      if (apiToken.length > 0 && token === apiToken) return next();
+      void verifyAccessToken(token, authConfig!).then(
+        (user) => {
+          if (!user) return rejectAuth(res, 'AUTH_INVALID', 'Session expired or invalid');
+          // Downstream routes can scope data per user once that lands.
+          (req as { odUser?: { id: string; email?: string } }).odUser = user;
+          return next();
+        },
+        () => rejectAuth(res, 'AUTH_INVALID', 'Session check failed'),
+      );
+      return undefined;
     });
   }
 

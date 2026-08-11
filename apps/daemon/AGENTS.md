@@ -88,6 +88,49 @@ Guidelines:
 - Keep parsing/validation near the route boundary and push reusable behavior into named helpers or services.
 - Do not add new route handlers directly to `server.ts` unless they are bootstrap-wide process metadata such as health/version.
 
+## API authentication
+
+Two independent guards protect `/api`. They answer different questions and are
+configured separately; do not collapse them.
+
+- **`OD_API_TOKEN`** (`src/api-token-auth.ts`) — machine credential. Answers
+  "is this caller allowed to reach the daemon at all?". **Exempts loopback**, so
+  it cannot gate anything running on the same machine, and is mandatory when
+  `OD_BIND_HOST` is not a loopback address.
+- **`OD_REQUIRE_AUTH`** (`src/supabase-auth.ts`) — user session. Answers "is a
+  real Supabase user signed in?". **No loopback exemption** — that exemption is
+  precisely what this guard exists to close. Off unless the flag is set *and*
+  Supabase config resolves; a half-configured daemon keeps its previous
+  behaviour rather than rejecting everything.
+
+Environment:
+
+| Variable | Purpose |
+| --- | --- |
+| `OD_REQUIRE_AUTH` | `1` to demand a signed-in user on `/api`. |
+| `OD_SUPABASE_URL` | Supabase project URL. Falls back to `NEXT_PUBLIC_SUPABASE_URL`. |
+| `OD_SUPABASE_ANON_KEY` | Supabase anon/publishable key. Falls back to `NEXT_PUBLIC_SUPABASE_ANON_KEY`. |
+| `OD_API_TOKEN` | Machine token; also accepted by the session guard so `od` keeps working. |
+
+These belong in the **repository-root** `.env.local` (see `.env.local.example`
+there), which is what `tools-dev` loads into the daemon process. `apps/web/.env.local`
+is read by Next.js for the browser bundle and never reaches the daemon.
+
+Rules:
+
+- When the session guard is enabled, **`OD_API_TOKEN` must also be set** or the
+  `od` CLI loses access — the terminal has no browser session to present. The
+  CLI stamps this token onto loopback requests via `src/cli-auth-fetch.ts`.
+- Tokens are verified by introspection against `GET /auth/v1/user`, cached per
+  token. Verification **fails closed**: an unreachable Supabase rejects requests
+  that are not already cached. Do not "fail open" on network errors — a revoked
+  token and an unreachable server are indistinguishable from here.
+- The guard tags its own rejections with `x-od-auth: required`. The web client
+  signs the user out when it sees that header, so a route proxying a third
+  party must never forward someone else's 401 with this header attached.
+- Accepted token carriers: `Authorization: Bearer`, `?access_token=` (for
+  `EventSource`, which cannot set headers), and the `sb-access-token` cookie.
+
 ## Dependency Boundaries
 
 - `src/server-context.ts` is the route dependency map. If a route needs a new cross-route dependency, add it there deliberately and keep its type narrow.

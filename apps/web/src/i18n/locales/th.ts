@@ -4246,5 +4246,14 @@ export const th: Dict = {
   'login.notice.resetSent': 'หากมีอีเมลนี้อยู่ เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปแล้ว',
   'login.notice.accountCreated': 'สร้างบัญชีแล้ว โปรดตรวจสอบอีเมลเพื่อยืนยัน จากนั้นเข้าสู่ระบบ',
   'login.supabaseMissing': 'ยังไม่ได้เชื่อมต่อ Supabase เพิ่มคีย์ของคุณใน {file} เพื่อเปิดใช้งานการเข้าสู่ระบบ',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'ยืนยันอีเมลแล้ว',
+  'login.confirm.subtitle': 'บัญชีของคุณพร้อมแล้ว เข้าสู่ระบบเพื่อเริ่มต้น',
+  'login.confirm.failed': 'เรายืนยันอีเมลของคุณไม่ได้ ลิงก์อาจหมดอายุแล้ว',
+  'login.reset.newTitle': 'ตั้งรหัสผ่านใหม่',
+  'login.reset.newSubtitle': 'เลือกรหัสผ่านที่คุณยังไม่เคยใช้',
+  'login.reset.save': 'บันทึกรหัสผ่าน',
+  'login.reset.done': 'อัปเดตรหัสผ่านแล้ว คุณเข้าสู่ระบบได้เลย',
+  'login.reset.invalidLink': 'ลิงก์นี้ไม่ถูกต้องหรือหมดอายุแล้ว กรุณาขอลิงก์ใหม่',
 
 };

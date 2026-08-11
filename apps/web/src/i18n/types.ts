@@ -4386,5 +4386,14 @@ export interface Dict {
   'login.notice.resetSent': string;
   'login.notice.accountCreated': string;
   'login.supabaseMissing': string;
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': string;
+  'login.confirm.subtitle': string;
+  'login.confirm.failed': string;
+  'login.reset.newTitle': string;
+  'login.reset.newSubtitle': string;
+  'login.reset.save': string;
+  'login.reset.done': string;
+  'login.reset.invalidLink': string;
 
 }

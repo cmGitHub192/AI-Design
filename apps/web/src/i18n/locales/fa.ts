@@ -4241,5 +4241,14 @@ export const fa: Dict = {
   'login.notice.resetSent': 'اگر این ایمیل وجود داشته باشد، پیوند بازنشانی رمز عبور را فرستادیم.',
   'login.notice.accountCreated': 'حساب ساخته شد. برای تأیید، ایمیل خود را بررسی کنید و سپس وارد شوید.',
   'login.supabaseMissing': 'Supabase هنوز متصل نشده است. کلیدهای خود را در {file} اضافه کنید تا ورود فعال شود.',
+  // Email-link landing screens (app/auth/confirm, app/auth/reset)
+  'login.confirm.title': 'ایمیل تأیید شد',
+  'login.confirm.subtitle': 'حساب شما آماده است. برای شروع وارد شوید.',
+  'login.confirm.failed': 'نتوانستیم ایمیل شما را تأیید کنیم. ممکن است پیوند منقضی شده باشد.',
+  'login.reset.newTitle': 'یک گذرواژه تازه انتخاب کنید',
+  'login.reset.newSubtitle': 'گذرواژه‌ای انتخاب کنید که پیش‌تر استفاده نکرده‌اید.',
+  'login.reset.save': 'ذخیرهٔ گذرواژه',
+  'login.reset.done': 'گذرواژه‌تان به‌روزرسانی شد. اکنون می‌توانید وارد شوید.',
+  'login.reset.invalidLink': 'این پیوند نامعتبر یا منقضی است. پیوند تازه‌ای بخواهید.',
 
 };

@@ -5,6 +5,7 @@
 // These helpers fail soft (returning null / [] on transport errors) so
 // the UI can stay rendered when the daemon is briefly unreachable.
 
+import { withAccessToken } from '../auth/install-auth-fetch';
 import type {
   AppliedPluginSnapshot,
   ApplyResult,
@@ -558,7 +559,11 @@ export async function createTerminal(
 
 /** SSE endpoint a `<TerminalViewer>` subscribes to for raw PTY output. */
 export function terminalStreamUrl(projectId: string, terminalId: string): string {
-  return `/api/projects/${encodeURIComponent(projectId)}/terminals/${encodeURIComponent(terminalId)}/stream`;
+  // EventSource cannot send an Authorization header, so the access token rides
+  // in the query string (see src/auth/install-auth-fetch.ts).
+  return withAccessToken(
+    `/api/projects/${encodeURIComponent(projectId)}/terminals/${encodeURIComponent(terminalId)}/stream`,
+  );
 }
 
 export async function sendTerminalStdin(
