@@ -4246,6 +4246,9 @@ export const hu: Dict = {
   'login.notice.resetSent': 'Ha az e-mail létezik, küldtünk egy linket a jelszó visszaállításához.',
   'login.notice.accountCreated': 'Fiók létrehozva. Erősítsd meg az e-mailedben, majd jelentkezz be.',
   'login.supabaseMissing': 'A Supabase még nincs csatlakoztatva. Add meg a kulcsaidat itt: {file}, hogy működjön a bejelentkezés.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Sablonjaim',
+  'myTemplates.subtitle': 'A te dizájnsablonjaid',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'E-mail megerősítve',
   'login.confirm.subtitle': 'A fiókod készen áll. Jelentkezz be a kezdéshez.',

@@ -4246,6 +4246,9 @@ export const tr: Dict = {
   'login.notice.resetSent': 'Bu e-posta kayıtlıysa, şifre sıfırlama bağlantısı gönderdik.',
   'login.notice.accountCreated': 'Hesap oluşturuldu. E-postanızdan onaylayın, ardından giriş yapın.',
   'login.supabaseMissing': 'Supabase henüz bağlı değil. Girişi etkinleştirmek için anahtarlarınızı {file} dosyasına ekleyin.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Şablonlarım',
+  'myTemplates.subtitle': 'Tasarım şablonların',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'E-posta doğrulandı',
   'login.confirm.subtitle': 'Hesabın hazır. Başlamak için giriş yap.',

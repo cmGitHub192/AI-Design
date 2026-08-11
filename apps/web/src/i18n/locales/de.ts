@@ -4246,6 +4246,9 @@ export const de: Dict = {
   'login.notice.resetSent': 'Falls die E-Mail existiert, haben wir einen Link zum Zurücksetzen des Passworts gesendet.',
   'login.notice.accountCreated': 'Konto erstellt. Bestätige es über deine E-Mail und melde dich dann an.',
   'login.supabaseMissing': 'Supabase ist noch nicht verbunden. Füge deine Schlüssel in {file} hinzu, um die Anmeldung zu aktivieren.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Meine Vorlagen',
+  'myTemplates.subtitle': 'Deine Design-Vorlagen',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'E-Mail bestätigt',
   'login.confirm.subtitle': 'Dein Konto ist bereit. Melde dich an, um loszulegen.',

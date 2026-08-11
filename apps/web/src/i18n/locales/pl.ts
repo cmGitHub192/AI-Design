@@ -4246,6 +4246,9 @@ export const pl: Dict = {
   'login.notice.resetSent': 'Jeśli ten adres istnieje, wysłaliśmy link do zresetowania hasła.',
   'login.notice.accountCreated': 'Konto utworzone. Potwierdź je w e-mailu, a następnie zaloguj się.',
   'login.supabaseMissing': 'Supabase nie jest jeszcze podłączony. Dodaj swoje klucze w {file}, aby włączyć logowanie.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Moje szablony',
+  'myTemplates.subtitle': 'Twoje szablony projektowe',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'E-mail potwierdzony',
   'login.confirm.subtitle': 'Twoje konto jest gotowe. Zaloguj się, aby zacząć.',

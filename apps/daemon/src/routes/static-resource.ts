@@ -451,6 +451,12 @@ export function registerStaticResourceRoutes(app: Express, ctx: RegisterStaticRe
   //      so a skill that aggregates examples (like live-artifact) still has
   //      a real preview on its parent card instead of returning 404.
   app.get('/api/skills/:id/example', async (req, res) => {
+    // Templates are edited in place on the user's disk, so a cached preview
+    // keeps showing the previous design until a hard reload — the change looks
+    // like it did not work. `no-cache` forces revalidation without giving up
+    // the 304: Express still sends the ETag, so an unchanged example costs an
+    // empty response rather than a re-download.
+    res.set('Cache-Control', 'no-cache');
     try {
       // Span both functional skills and design templates: rendered example
       // HTML rewrites assets to /api/skills/<id>/... and we want those URLs
@@ -885,14 +891,43 @@ export function assembleExample(templateHtml: string, slidesHtml: string, title:
     .replace(/<title>.*?<\/title>/, `<title>${title} | Open Design Example</title>`);
 }
 
+// `src="assets/x.png"` / `href="./assets/x.css"` / `src="../sibling/assets/x"`.
+const SKILL_ASSET_ATTR_RE =
+  /(\s(?:src|href)\s*=\s*)(['"])((?:\.\.\/([^/'"#?]+)\/)?(?:\.\/)?assets\/([^'"#?]+))(\2)/gi;
+
+// The same paths inside a CSS `url(...)`, quoted or bare.
+//
+// Without this a template that paints its brand background from a <style> block
+// kept a relative URL. The example is served from `/api/skills/<id>/example`
+// (no trailing segment), so the browser resolved it against `/api/skills/` and
+// 404'd — the slide then silently fell back to whatever the CSS listed next,
+// which is how the Inova deck previewed with its placeholder pattern instead of
+// the real corporate background.
+const SKILL_ASSET_CSS_URL_RE =
+  /(url\(\s*)(['"]?)((?:\.\.\/([^/'")\s]+)\/)?(?:\.\/)?assets\/([^'")\s#?]+))(\2\s*\))/gi;
+
 export function rewriteSkillAssetUrls(html: string, skillId: string) {
   if (typeof html !== 'string' || html.length === 0) return html;
-  return html.replace(
-    /(\s(?:src|href)\s*=\s*)(['"])((?:\.\.\/([^/'"#?]+)\/)?(?:\.\/)?assets\/([^'"#?]+))(\2)/gi,
-    (_match, attr, openQuote, _fullPath, siblingSkillId, relPath, closeQuote) => {
-      const resolvedSkillId = siblingSkillId || skillId;
-      const prefix = `/api/skills/${encodeURIComponent(resolvedSkillId)}/assets/`;
-      return `${attr}${openQuote}${prefix}${relPath}${closeQuote}`;
-    },
-  );
+  const rewrite = (
+    lead: string,
+    openQuote: string,
+    siblingSkillId: string | undefined,
+    relPath: string,
+    tail: string,
+  ) => {
+    const resolvedSkillId = siblingSkillId || skillId;
+    const prefix = `/api/skills/${encodeURIComponent(resolvedSkillId)}/assets/`;
+    return `${lead}${openQuote}${prefix}${relPath}${tail}`;
+  };
+  return html
+    .replace(
+      SKILL_ASSET_ATTR_RE,
+      (_match, attr, openQuote, _fullPath, siblingSkillId, relPath, closeQuote) =>
+        rewrite(attr, openQuote, siblingSkillId, relPath, closeQuote),
+    )
+    .replace(
+      SKILL_ASSET_CSS_URL_RE,
+      (_match, open, openQuote, _fullPath, siblingSkillId, relPath, close) =>
+        rewrite(open, openQuote, siblingSkillId, relPath, close),
+    );
 }

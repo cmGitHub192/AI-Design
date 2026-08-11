@@ -4246,6 +4246,9 @@ export const ko: Dict = {
   'login.notice.resetSent': '해당 이메일이 존재하면 비밀번호 재설정 링크를 보냈습니다.',
   'login.notice.accountCreated': '계정이 생성되었습니다. 이메일에서 확인한 뒤 로그인하세요.',
   'login.supabaseMissing': 'Supabase가 아직 연결되지 않았습니다. {file}에 키를 추가하면 로그인이 활성화됩니다.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': '내 템플릿',
+  'myTemplates.subtitle': '내 디자인 템플릿',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': '이메일이 확인되었습니다',
   'login.confirm.subtitle': '계정이 준비되었습니다. 로그인해 시작하세요.',

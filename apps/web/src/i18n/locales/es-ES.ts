@@ -4246,6 +4246,9 @@ export const esES: Dict = {
   'login.notice.resetSent': 'Si el correo existe, te enviamos un enlace para restablecer la contraseña.',
   'login.notice.accountCreated': 'Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.',
   'login.supabaseMissing': 'Supabase todavía no está conectado. Añade tus claves en {file} para activar el login.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Mis plantillas',
+  'myTemplates.subtitle': 'Tus plantillas de diseño',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'Correo confirmado',
   'login.confirm.subtitle': 'Tu cuenta está lista. Inicia sesión para empezar.',

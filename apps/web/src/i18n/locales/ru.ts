@@ -4246,6 +4246,9 @@ export const ru: Dict = {
   'login.notice.resetSent': 'Если такая почта существует, мы отправили ссылку для сброса пароля.',
   'login.notice.accountCreated': 'Аккаунт создан. Подтвердите его по ссылке в письме и войдите.',
   'login.supabaseMissing': 'Supabase ещё не подключён. Добавьте ключи в {file}, чтобы включить вход.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Мои шаблоны',
+  'myTemplates.subtitle': 'Ваши дизайн-шаблоны',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'Почта подтверждена',
   'login.confirm.subtitle': 'Аккаунт готов. Войдите, чтобы начать.',

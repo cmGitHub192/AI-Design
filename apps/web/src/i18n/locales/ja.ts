@@ -4246,6 +4246,9 @@ export const ja: Dict = {
   'login.notice.resetSent': 'そのメールアドレスが存在する場合、パスワード再設定用のリンクを送信しました。',
   'login.notice.accountCreated': 'アカウントを作成しました。メールで確認してからログインしてください。',
   'login.supabaseMissing': 'Supabase がまだ接続されていません。{file} にキーを追加するとログインを有効にできます。',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'マイテンプレート',
+  'myTemplates.subtitle': 'あなたのデザインテンプレート',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'メールを確認しました',
   'login.confirm.subtitle': 'アカウントの準備ができました。ログインして始めましょう。',

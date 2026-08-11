@@ -16,7 +16,7 @@ Centered navy title + italic subtitle over the full frame.
 ```html
 <section class="slide slide--cover" data-screen-label="01 Cover">
   <div class="slide__stage">
-    <h1 class="cover-title">FaxiAI + FaxiHive</h1>
+    <h1 class="cover-title">Título de la presentación</h1>
     <p class="cover-sub">IA agéntica nativa de Azure y Microsoft 365.</p>
   </div>
 </section>
@@ -32,14 +32,14 @@ Navy title (cleared from the top-left logo by `.slide-head`) + green kicker,
 with a lead paragraph in the white center. Add the footer URL on content slides.
 
 ```html
-<section class="slide" data-screen-label="06 FaxiHive">
+<section class="slide" data-screen-label="06 Producto">
   <div class="slide__stage">
     <div class="slide-head">
-      <h2 class="slide-title">Faxi Hive</h2>
+      <h2 class="slide-title">Nombre del producto</h2>
       <p class="kicker">Un PM agéntico para cada persona</p>
     </div>
     <div class="stage-body">
-      <p class="lead">Faxi Hive le da a cada persona un Twin: un Project Manager personal.</p>
+      <p class="lead">Una frase que explica qué hace el producto para cada persona.</p>
     </div>
   </div>
   <div class="footer-url">www.inovacorporation.com</div>
@@ -89,7 +89,7 @@ Navy check bullets on the left, framed photo on the right.
 <section class="slide" data-screen-label="05 El resultado">
   <div class="slide__stage">
     <div class="slide-head">
-      <h2 class="slide-title">FaxiAI</h2>
+      <h2 class="slide-title">Nombre del producto</h2>
       <p class="kicker">El resultado</p>
     </div>
     <div class="stage-body">
@@ -188,11 +188,11 @@ Two framed images with a blue caption bar under each.
     <div class="stage-body">
       <div class="cols cols-2">
         <div>
-          <div class="img-frame" style="aspect-ratio:16/10;"><img src="assets/faxiai.png" alt="FaxiAI" /></div>
+          <div class="img-frame" style="aspect-ratio:16/10;"><img src="assets/imagen-1.png" alt="Descripción de la imagen" /></div>
           <p class="card__title" style="background:var(--brand-blue);color:#fff;border-radius:8px;padding:10px;margin:12px 0 0;">Foundry IQ accionable</p>
         </div>
         <div>
-          <div class="img-frame" style="aspect-ratio:16/10;"><img src="assets/faxihive.png" alt="Faxi Hive" /></div>
+          <div class="img-frame" style="aspect-ratio:16/10;"><img src="assets/imagen-2.png" alt="Descripción de la imagen" /></div>
           <p class="card__title" style="background:var(--brand-blue);color:#fff;border-radius:8px;padding:10px;margin:12px 0 0;">Work IQ accionable</p>
         </div>
       </div>

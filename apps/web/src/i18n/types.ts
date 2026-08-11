@@ -4386,6 +4386,9 @@ export interface Dict {
   'login.notice.resetSent': string;
   'login.notice.accountCreated': string;
   'login.supabaseMissing': string;
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': string;
+  'myTemplates.subtitle': string;
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': string;
   'login.confirm.subtitle': string;

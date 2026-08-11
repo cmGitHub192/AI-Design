@@ -4708,6 +4708,9 @@ export const zhTW: Dict = {
   'login.notice.resetSent': '若該信箱存在，我們已寄出重設密碼的連結。',
   'login.notice.accountCreated': '帳號已建立。請至信箱完成確認後登入。',
   'login.supabaseMissing': 'Supabase 尚未連線。在 {file} 中填入你的金鑰即可啟用登入。',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': '我的範本',
+  'myTemplates.subtitle': '你的設計範本',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': '電子郵件已確認',
   'login.confirm.subtitle': '帳號已就緒，登入即可開始。',

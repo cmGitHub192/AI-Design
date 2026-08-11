@@ -1,11 +1,14 @@
 ---
 name: inova-deck
 en_name: "Inova Solutions branded corporate deck"
+es_name: "Presentación Inova Solutions"
 zh_name: "Inova Solutions 品牌企业演示文稿"
 description: |
-  Inova Solutions branded HTML deck: the corporate triangle-frame background on every slide, navy titles, green kickers, and blue rounded cards — the FaxiAI / FaxiHive house style. Single-file horizontal-swipe deck.
+  Inova Solutions branded HTML deck: the corporate triangle-frame background on every slide, navy titles, green kickers, and blue rounded cards. Single-file horizontal-swipe deck.
 en_description: |
-  Inova Solutions branded HTML deck: the corporate triangle-frame background on every slide, navy titles, green kickers, and blue rounded cards — the FaxiAI / FaxiHive house style. Single-file horizontal-swipe deck.
+  Inova Solutions branded HTML deck: the corporate triangle-frame background on every slide, navy titles, green kickers, and blue rounded cards. Single-file horizontal-swipe deck.
+es_description: |
+  Presentación HTML con la marca de Inova Solutions: el fondo corporativo de triángulos en cada diapositiva, títulos en azul marino, subtítulos verdes y tarjetas azules redondeadas. Deck horizontal en un solo archivo.
 zh_description: |
   Inova Solutions 品牌 HTML 演示：每页都带企业三角边框背景、深蓝标题、绿色副标与蓝色圆角卡片。单文件横向滑动演示。
 tags:
@@ -13,16 +16,11 @@ tags:
   - "brand-deck"
   - "inova"
   - "inova-solutions"
-  - "faxiai"
-  - "faxihive"
   - "business-review"
   - "sales-deck"
 triggers:
   - "inova"
   - "inova solutions"
-  - "faxiai"
-  - "faxi hive"
-  - "faxihive"
   - "plantilla inova"
   - "deck inova"
   - "corporate deck"

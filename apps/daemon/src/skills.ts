@@ -205,11 +205,8 @@ export async function listSkills(
             : "html";
         const description =
           typeof data.description === "string" ? data.description : "";
-        const displayName = localizedMapFromFields(data.en_name, data.zh_name);
-        const descriptionI18n = localizedMapFromFields(
-          data.en_description,
-          data.zh_description,
-        );
+        const displayName = localizedMapFromFields(data, "name");
+        const descriptionI18n = localizedMapFromFields(data, "description");
         const examplePromptI18n = localizedMapFromRecord(data.od?.example_prompt_i18n);
         const parentBody = hasAttachments
           ? withSkillRootPreamble(body, dir)
@@ -522,13 +519,44 @@ function normalizeBoolHint(value: unknown): boolean | null {
   return null;
 }
 
+// SKILL.md frontmatter carries localized copy as `<lang>_name` /
+// `<lang>_description`. The prefix is the short language code authors already
+// write (`en_`, `zh_`); this table maps it to the locale ids the web resolves
+// against. Without an entry here a translation is silently ignored and the card
+// falls back to English, which is what used to happen to every language except
+// Chinese.
+const FRONTMATTER_LOCALE_PREFIXES: ReadonlyArray<readonly [string, string]> = [
+  ["en", "en"],
+  ["ar", "ar"],
+  ["de", "de"],
+  ["es", "es-ES"],
+  ["fa", "fa"],
+  ["fr", "fr"],
+  ["hu", "hu"],
+  ["id", "id"],
+  ["it", "it"],
+  ["ja", "ja"],
+  ["ko", "ko"],
+  ["pl", "pl"],
+  ["pt", "pt-BR"],
+  ["ru", "ru"],
+  ["th", "th"],
+  ["tr", "tr"],
+  ["uk", "uk"],
+  ["zh", "zh-CN"],
+  ["zh_tw", "zh-TW"],
+];
+
 function localizedMapFromFields(
-  enValue: unknown,
-  zhValue: unknown,
+  data: unknown,
+  field: "name" | "description",
 ): Record<string, string> | undefined {
+  if (!isRecord(data)) return undefined;
   const out: Record<string, string> = {};
-  if (typeof enValue === "string" && enValue.trim()) out.en = enValue.trim();
-  if (typeof zhValue === "string" && zhValue.trim()) out["zh-CN"] = zhValue.trim();
+  for (const [prefix, locale] of FRONTMATTER_LOCALE_PREFIXES) {
+    const raw = data[`${prefix}_${field}`];
+    if (typeof raw === "string" && raw.trim()) out[locale] = raw.trim();
+  }
   return Object.keys(out).length > 0 ? out : undefined;
 }
 

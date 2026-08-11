@@ -4246,6 +4246,9 @@ export const ar: Dict = {
   'login.notice.resetSent': 'إذا كان هذا البريد موجوداً، فقد أرسلنا رابطاً لإعادة تعيين كلمة المرور.',
   'login.notice.accountCreated': 'تم إنشاء الحساب. تحقق من بريدك لتأكيده ثم سجّل الدخول.',
   'login.supabaseMissing': 'لم يتم ربط Supabase بعد. أضف مفاتيحك في {file} لتفعيل تسجيل الدخول.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'قوالبي',
+  'myTemplates.subtitle': 'قوالب التصميم الخاصة بك',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'تم تأكيد البريد الإلكتروني',
   'login.confirm.subtitle': 'حسابك جاهز. سجّل الدخول للبدء.',

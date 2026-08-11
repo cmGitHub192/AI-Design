@@ -4246,6 +4246,9 @@ export const th: Dict = {
   'login.notice.resetSent': 'หากมีอีเมลนี้อยู่ เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปแล้ว',
   'login.notice.accountCreated': 'สร้างบัญชีแล้ว โปรดตรวจสอบอีเมลเพื่อยืนยัน จากนั้นเข้าสู่ระบบ',
   'login.supabaseMissing': 'ยังไม่ได้เชื่อมต่อ Supabase เพิ่มคีย์ของคุณใน {file} เพื่อเปิดใช้งานการเข้าสู่ระบบ',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'เทมเพลตของฉัน',
+  'myTemplates.subtitle': 'เทมเพลตดีไซน์ของคุณ',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'ยืนยันอีเมลแล้ว',
   'login.confirm.subtitle': 'บัญชีของคุณพร้อมแล้ว เข้าสู่ระบบเพื่อเริ่มต้น',

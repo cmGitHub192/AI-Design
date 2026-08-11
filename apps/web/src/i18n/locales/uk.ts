@@ -4246,6 +4246,9 @@ export const uk: Dict = {
   'login.notice.resetSent': 'Якщо така пошта існує, ми надіслали посилання для скидання пароля.',
   'login.notice.accountCreated': 'Акаунт створено. Підтвердьте його з листа та увійдіть.',
   'login.supabaseMissing': 'Supabase ще не підключено. Додайте ключі у {file}, щоб увімкнути вхід.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Мої шаблони',
+  'myTemplates.subtitle': 'Ваші дизайн-шаблони',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'Пошту підтверджено',
   'login.confirm.subtitle': 'Обліковий запис готовий. Увійдіть, щоб почати.',

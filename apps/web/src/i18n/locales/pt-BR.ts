@@ -4246,6 +4246,9 @@ export const ptBR: Dict = {
   'login.notice.resetSent': 'Se o e-mail existir, enviamos um link para redefinir a senha.',
   'login.notice.accountCreated': 'Conta criada. Confira seu e-mail para confirmá-la e depois entre.',
   'login.supabaseMissing': 'O Supabase ainda não está conectado. Adicione suas chaves em {file} para ativar o login.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Meus modelos',
+  'myTemplates.subtitle': 'Seus modelos de design',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'E-mail confirmado',
   'login.confirm.subtitle': 'Sua conta está pronta. Faça login para começar.',

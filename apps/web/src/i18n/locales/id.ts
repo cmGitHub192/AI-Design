@@ -4246,6 +4246,9 @@ export const id: Dict = {
   'login.notice.resetSent': 'Jika email tersebut ada, kami telah mengirim tautan untuk mengatur ulang kata sandi.',
   'login.notice.accountCreated': 'Akun dibuat. Periksa email Anda untuk mengonfirmasi, lalu masuk.',
   'login.supabaseMissing': 'Supabase belum terhubung. Tambahkan kunci Anda di {file} untuk mengaktifkan login.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Templat saya',
+  'myTemplates.subtitle': 'Templat desain Anda',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'Email dikonfirmasi',
   'login.confirm.subtitle': 'Akun Anda siap. Masuk untuk memulai.',

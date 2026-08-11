@@ -4700,6 +4700,9 @@ export const zhCN: Dict = {
   'login.notice.resetSent': '如果该邮箱存在，我们已发送重置密码的链接。',
   'login.notice.accountCreated': '账户已创建。请查收邮件完成确认，然后登录。',
   'login.supabaseMissing': 'Supabase 尚未连接。在 {file} 中填入你的密钥即可启用登录。',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': '我的模板',
+  'myTemplates.subtitle': '你的设计模板',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': '邮箱已确认',
   'login.confirm.subtitle': '账号已就绪，登录即可开始。',

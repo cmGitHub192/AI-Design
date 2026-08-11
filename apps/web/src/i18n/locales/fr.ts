@@ -4246,6 +4246,9 @@ export const fr: Dict = {
   'login.notice.resetSent': 'Si cette adresse existe, nous avons envoyé un lien pour réinitialiser le mot de passe.',
   'login.notice.accountCreated': 'Compte créé. Confirmez-le depuis votre e-mail, puis connectez-vous.',
   'login.supabaseMissing': 'Supabase n’est pas encore connecté. Ajoutez vos clés dans {file} pour activer la connexion.',
+  // Home > Mis plantillas (user-owned design templates)
+  'myTemplates.title': 'Mes modèles',
+  'myTemplates.subtitle': 'Vos modèles de design',
   // Email-link landing screens (app/auth/confirm, app/auth/reset)
   'login.confirm.title': 'E-mail confirmé',
   'login.confirm.subtitle': 'Votre compte est prêt. Connectez-vous pour commencer.',
