@@ -200,6 +200,15 @@ async function checkReadmeSwitchers(): Promise<CheckResult> {
   const readmes = await rootReadmeFiles();
   const readmeSet = new Set(readmes);
   const canonicalName = "README.md";
+
+  // The switcher exists to keep the root README and its translations pointing at
+  // each other. With no translations under docs/i18n/ there is nothing to switch
+  // between, and demanding a switcher would fail on every run forever. Restoring
+  // a translation re-arms every assertion below.
+  if (readmes.every((name) => name === canonicalName)) {
+    return { name: "root README language switchers", errors };
+  }
+
   const canonicalSource = await readFile(docPhysicalPath(canonicalName), "utf8");
   const canonicalEntries = extractReadmeSwitcher(canonicalSource);
 
