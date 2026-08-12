@@ -36,15 +36,34 @@ od:
     sections: [color, typography, layout, components]
   category: "mis-plantillas"
   scenario: "strategy"
-  example_prompt: "Crea una presentación con la plantilla de marca Inova Solutions. Tema: [tu tema]. Público: [tu público]. Usa el fondo corporativo de triángulos en todas las diapositivas, títulos en azul marino, subtítulos verdes y tarjetas azules redondeadas. Antes de escribir, pregúntame solo lo esencial que falte (público, objetivo, número de diapositivas, datos que deben aparecer). Luego propón el plan de diapositivas y escríbelas."
+  # Just the topic. The brand rules and the ask-then-plan kick-off live in the
+  # body below, which the agent always reads — repeating them here only made the
+  # user retype instructions the skill already carries.
+  example_prompt: "Crea una presentación sobre [tu tema]."
 ---
 
 # Inova Solutions Deck Skill
 
 Produce a single-file Inova-branded HTML deck. This template is built **on top of
 the official OD deck framework** (fixed 1920×1080 canvas, scale-to-fit,
-`.slide.active` visibility, framework chrome + script). The host preview REQUIRES
-that framework — a `100vw/100vh` scroll deck renders **blank** in the app preview.
+`.slide.active` visibility, framework chrome + script). That framework is what
+makes PDF / PPTX export work: the `@media print` block turns each slide into one
+1920×1080 page. A `100vw/100vh` scroll deck previews, but exports as a single
+unusable strip — so it is still forbidden here.
+
+## Kick-off — ask, plan, then write
+
+The user is expected to give you only a topic. Before writing anything:
+
+1. **Ask only for what is genuinely missing** and would change the deck:
+   audience, objective, slide count, and any figures that must appear. Ask them
+   in one `<question-form>`, not one at a time. Do not ask about the brand — the
+   palette, background and layouts are fixed by this template.
+2. **Propose the slide plan** (one line per slide) and let the user react.
+3. **Then write the file.**
+
+Never invent numbers, client names or dates to fill a slide. If a figure is
+missing after asking, use an explicit placeholder the user can spot.
 
 ## THE ONE RULE
 
@@ -66,14 +85,17 @@ You edit ONLY:
 scroll model. Sizes inside slides are **fixed px** for the 1920×1080 canvas
 (never `vw`/`vh`).
 
-## Brand background — real PNG with an inline-SVG fallback
+## Brand background — the real PNG, and only that
 
-`.s-frame` layers TWO backgrounds: `url("assets/background.png")` on top of the
-inline-SVG `--brand-bg` underneath. The project ships the real Inova
-`assets/background.png` (the daemon copies it in when you start from this
-template), so it covers the SVG and every slide shows the exact brand image; if
-that file were ever missing, the SVG recreation still shows through — never a
-blank frame. **Leave the `.s-frame` rule and `--brand-bg` exactly as written.**
+`.s-frame` paints ONE background: `url("assets/background.png")`, the real Inova
+corporate frame that the daemon copies into the project when you start from this
+template.
+
+There used to be an inline-SVG imitation layered underneath as a fallback. It was
+removed on purpose: when the PNG failed to resolve, the imitation rendered
+instead and looked *almost* like the brand — a wrong logo and scattered triangles
+that shipped without anyone noticing. A missing background must look missing.
+**Do not add a fallback layer.** Leave the `.s-frame` rule exactly as written.
 
 Do NOT add OTHER external image files for photo slots (`<img src="foo.png">` to
 files that don't exist) — leave `.img-frame` empty or put a short caption inside
@@ -108,7 +130,6 @@ humans — but generate from the inline copy below, not by reading files.
     :root {
       --bg:#ffffff; --fg:#1f2937; --muted:#5b6472; --accent:#2e75b6; --surface:#ffffff; --shell:#eceff3;
       --brand-navy:#1f3a63; --brand-blue:#2e75b6; --brand-cyan:#29abe2; --brand-green:#8dc63f; --border:#e4e8ef;
-      --brand-bg: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201920%201080%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Crect%20width%3D%221920%22%20height%3D%221080%22%20fill%3D%22%23ffffff%22%2F%3E%3Cpolygon%20points%3D%221560%2C60%201620%2C60%201590%2C0%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221620%2C0%201680%2C0%201650%2C60%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%221680%2C60%201740%2C60%201710%2C0%22%20fill%3D%22%23e7edf3%22%2F%3E%3Cpolygon%20points%3D%221740%2C0%201800%2C0%201770%2C60%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221800%2C60%201860%2C60%201830%2C0%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221860%2C0%201920%2C0%201890%2C60%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221590%2C60%201650%2C60%201620%2C120%22%20fill%3D%22%231b75bb%22%2F%3E%3Cpolygon%20points%3D%221650%2C120%201710%2C120%201680%2C60%22%20fill%3D%22%23f0f3f7%22%2F%3E%3Cpolygon%20points%3D%221710%2C60%201770%2C60%201740%2C120%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221770%2C120%201830%2C120%201800%2C60%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%221830%2C60%201890%2C60%201860%2C120%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221890%2C120%201950%2C120%201920%2C60%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221680%2C180%201740%2C180%201710%2C120%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221740%2C120%201800%2C120%201770%2C180%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%221800%2C180%201860%2C180%201830%2C120%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221860%2C120%201920%2C120%201890%2C180%22%20fill%3D%22%23e7edf3%22%2F%3E%3Cpolygon%20points%3D%221770%2C180%201830%2C180%201800%2C240%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221830%2C240%201890%2C240%201860%2C180%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221890%2C180%201950%2C180%201920%2C240%22%20fill%3D%22%23f0f3f7%22%2F%3E%3Cpolygon%20points%3D%220%2C960%2060%2C960%2030%2C900%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%2260%2C900%20120%2C900%2090%2C960%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%22120%2C960%20180%2C960%20150%2C900%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%22180%2C900%20240%2C900%20210%2C960%22%20fill%3D%22%23e7edf3%22%2F%3E%3Cpolygon%20points%3D%2230%2C960%2090%2C960%2060%2C1020%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%2290%2C1020%20150%2C1020%20120%2C960%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%22150%2C960%20210%2C960%20180%2C1020%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%22210%2C1020%20270%2C1020%20240%2C960%22%20fill%3D%22%23f0f3f7%22%2F%3E%3Cpolygon%20points%3D%220%2C1080%2060%2C1080%2030%2C1020%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%2260%2C1020%20120%2C1020%2090%2C1080%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%22120%2C1080%20180%2C1080%20150%2C1020%22%20fill%3D%22%232e75b6%22%2F%3E%3Cpolygon%20points%3D%22180%2C1020%20240%2C1020%20210%2C1080%22%20fill%3D%22%2329abe2%22%2F%3E%3Cpolygon%20points%3D%221800%2C1080%201860%2C1080%201830%2C1020%22%20fill%3D%22%23c9d2dc%22%2F%3E%3Cpolygon%20points%3D%221860%2C1020%201920%2C1020%201890%2C1080%22%20fill%3D%22%238dc63f%22%2F%3E%3Cpolygon%20points%3D%221830%2C960%201890%2C960%201860%2C1020%22%20fill%3D%22%23e7edf3%22%2F%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22250%22%20height%3D%22188%22%20fill%3D%22%231f3a63%22%2F%3E%3Ctext%20x%3D%2226%22%20y%3D%22118%22%20font-family%3D%22Segoe%20UI%2CArial%2Csans-serif%22%20font-size%3D%2264%22%20font-weight%3D%22800%22%20font-style%3D%22italic%22%20fill%3D%22%23ffffff%22%3EInova%3C%2Ftext%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%2266%22%20r%3D%2212%22%20fill%3D%22%238dc63f%22%2F%3E%3Ctext%20x%3D%22120%22%20y%3D%22150%22%20font-family%3D%22Segoe%20UI%2CArial%2Csans-serif%22%20font-size%3D%2221%22%20font-weight%3D%22700%22%20letter-spacing%3D%224%22%20fill%3D%22%238dc63f%22%3ESOLUTIONS%3C%2Ftext%3E%3C%2Fsvg%3E");
       --font-display:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
       --font-body:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
     }
@@ -135,7 +156,7 @@ humans — but generate from the inline copy below, not by reading files.
       .deck-counter, .deck-hint { display: none !important; }
     }
     /* ===== Inova per-deck styles — FIXED px for the 1920×1080 canvas ===== */
-    .s-frame { background-image: url("assets/background.png"), var(--brand-bg); background-size: cover, 1920px 1080px; background-position: center, center; background-repeat: no-repeat, no-repeat; }
+    .s-frame { background-image: url("assets/background.png"); background-size: cover; background-position: center; background-repeat: no-repeat; }
     .stage { flex: 1; width: 100%; height: 100%; padding: 70px 130px 84px; display: flex; flex-direction: column; }
     .stage--cover { align-items: center; justify-content: center; text-align: center; }
     .slide-head { margin-left: 232px; margin-bottom: 44px; }
