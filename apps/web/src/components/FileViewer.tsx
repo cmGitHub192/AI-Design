@@ -964,6 +964,35 @@ export function desktopPreviewAutoFitZoomPercent(
   return Math.max(1, Math.min(100, (canvasSize.width / contentWidth) * 100));
 }
 
+/**
+ * Does this document lay its slides out as a horizontal filmstrip?
+ *
+ * Matches the same `class="… slide …"` token `sourceLooksLikeDeckPreview` keys
+ * on, so both agree on what counts as a deck. Two or more slides is the signal;
+ * the caller pairs it with "wider than the viewport" before acting.
+ */
+function documentLooksLikeSlideFilmstrip(doc: Document): boolean {
+  try {
+    return doc.querySelectorAll('[class~="slide"]').length >= 2;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Width the desktop auto-fit should try to fit into the pane.
+ *
+ * A deck built as a horizontal filmstrip — each slide `100vw`, snapped on the x
+ * axis — reports `scrollWidth = slides × viewport`. Fitting *that* shrinks a
+ * 10-slide deck to ~10%, and to the function's 1% floor once the pane is
+ * narrow: the symptom that made template-less decks look broken. That width is
+ * navigation, not content; slides are read one at a time, so a single viewport
+ * is the width that matters.
+ *
+ * Decks that hide their inactive slides (the bundled deck templates do:
+ * `.slide:not(.active) { display: none }`) never reach this branch, because
+ * their scrollWidth already equals the viewport — their behaviour is unchanged.
+ */
 export function desktopPreviewDocumentContentWidth(doc: Document | null | undefined): number | null {
   if (!doc) return null;
   const root = doc.documentElement;
@@ -976,7 +1005,18 @@ export function desktopPreviewDocumentContentWidth(doc: Document | null | undefi
     root?.clientWidth,
     body?.clientWidth,
   ].filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0);
-  return widths.length ? Math.max(...widths) : null;
+  if (!widths.length) return null;
+
+  const measured = Math.max(...widths);
+  const viewportWidth = root?.clientWidth ?? 0;
+  if (
+    viewportWidth > 0 &&
+    measured > viewportWidth &&
+    documentLooksLikeSlideFilmstrip(doc)
+  ) {
+    return viewportWidth;
+  }
+  return measured;
 }
 
 function zoomPercentLabel(zoomPercent: number): string {

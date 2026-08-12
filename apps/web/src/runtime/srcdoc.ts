@@ -729,6 +729,16 @@ function injectPreviewContentSizeBridge(doc: string): string {
   if (window.__odPreviewContentSizeBridge) return;
   window.__odPreviewContentSizeBridge = true;
   var pending = false;
+  // A deck laid out as a horizontal filmstrip - each slide 100vw, snapped on
+  // the x axis - reports scrollWidth = slides x viewport. The host auto-fits
+  // the preview to whatever we report here, so a 10-slide deck collapsed to
+  // ~10%, and to the host's 1% floor on a narrow pane. That width is
+  // navigation, not content: slides are read one at a time. Decks that hide
+  // their inactive slides (the bundled templates do) never hit this branch -
+  // their scrollWidth already equals the viewport.
+  function isSlideFilmstrip(){
+    try { return document.querySelectorAll('[class~="slide"]').length >= 2; } catch (_) { return false; }
+  }
   function measure(){
     var root = document.documentElement;
     var body = document.body || root;
@@ -746,7 +756,10 @@ function injectPreviewContentSizeBridge(doc: string): string {
       var next = Number(values[i] || 0);
       if (Number.isFinite(next) && next > width) width = next;
     }
-    return width > 0 ? Math.ceil(width) : null;
+    if (!(width > 0)) return null;
+    var viewport = Number(root.clientWidth || 0);
+    if (viewport > 0 && width > viewport && isSlideFilmstrip()) return viewport;
+    return Math.ceil(width);
   }
   function post(){
     try { window.parent.postMessage({ type: 'od:preview-content-size', width: measure() }, '*'); } catch (_) {}

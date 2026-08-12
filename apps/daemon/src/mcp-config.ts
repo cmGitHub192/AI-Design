@@ -591,14 +591,17 @@ export const MCP_TEMPLATES: McpTemplate[] = [
     id: 'pollinations',
     label: 'Pollinations',
     description:
-      'Free / freemium multimodal generation: images (Flux, GPT Image, Nano Banana, Seedream…), videos (Veo, Seedance, WAN, Grok Video…), text and 35+ TTS voices. Complements Higgsfield by giving the agent a no-cost fallback path and access to text + audio outputs. A publishable key (pk_*) at enter.pollinations.ai unlocks higher rate limits — leave POLLINATIONS_API_KEY empty for the anonymous tier.',
+      'Freemium multimodal generation: images, video, text, TTS voices, transcription and web search. **A key is now required** — image generation returns "API key required" without one, so the old anonymous tier no longer works. Get a free publishable key (pk_*) at enter.pollinations.ai/keys and set POLLINATIONS_API_KEY.',
     transport: 'stdio',
     category: 'image-generation',
     homepage: 'https://github.com/pollinations/pollinations/tree/main/packages/mcp',
     example:
       'Generate a photorealistic image of a moss-covered stone statue at golden hour using the flux model.',
     command: 'npx',
-    args: ['-y', '@pollinations_ai/mcp'],
+    // Published scope is `@pollinations`, not `@pollinations_ai` — the latter
+    // 404s on npm, so the server never started and the agent silently had no
+    // image tools.
+    args: ['-y', '@pollinations/mcp'],
     envFields: [
       {
         key: 'POLLINATIONS_API_KEY',

@@ -389,6 +389,49 @@ describe('FileViewer preview scale', () => {
     expect(desktopPreviewDocumentContentWidth(doc)).toBe(1440);
   });
 
+  // A deck laid out as a horizontal filmstrip (each slide 100vw, x-snapped)
+  // reports scrollWidth = slides × viewport. Auto-fitting to that collapsed a
+  // 10-slide deck to the 1% floor, which is what a template-less deck looked
+  // like in the preview.
+  it('ignores filmstrip scroll width so horizontal decks are not auto-fit to 1%', () => {
+    const doc = document.implementation.createHTMLDocument('deck');
+    doc.body.innerHTML = Array.from(
+      { length: 10 },
+      (_, i) => `<section class="slide light">slide ${i}</section>`,
+    ).join('');
+    Object.defineProperty(doc.documentElement, 'clientWidth', { configurable: true, value: 900 });
+    Object.defineProperty(doc.documentElement, 'scrollWidth', { configurable: true, value: 9000 });
+    Object.defineProperty(doc.body, 'scrollWidth', { configurable: true, value: 9000 });
+
+    expect(desktopPreviewDocumentContentWidth(doc)).toBe(900);
+    expect(
+      desktopPreviewAutoFitZoomPercent({ width: 900, height: 620 }, desktopPreviewDocumentContentWidth(doc)),
+    ).toBe(100);
+  });
+
+  it('leaves decks that hide inactive slides untouched', () => {
+    const doc = document.implementation.createHTMLDocument('deck');
+    doc.body.innerHTML = '<section class="slide active">a</section><section class="slide">b</section>';
+    // The bundled templates keep the document exactly one viewport wide.
+    Object.defineProperty(doc.documentElement, 'clientWidth', { configurable: true, value: 1280 });
+    Object.defineProperty(doc.documentElement, 'scrollWidth', { configurable: true, value: 1280 });
+    Object.defineProperty(doc.body, 'scrollWidth', { configurable: true, value: 1280 });
+
+    expect(desktopPreviewDocumentContentWidth(doc)).toBe(1280);
+  });
+
+  it('still auto-fits a wide page that is not a deck', () => {
+    const doc = document.implementation.createHTMLDocument('landing');
+    doc.body.innerHTML = '<main class="hero">wide landing page</main>';
+    Object.defineProperty(doc.documentElement, 'clientWidth', { configurable: true, value: 900 });
+    Object.defineProperty(doc.body, 'scrollWidth', { configurable: true, value: 1440 });
+
+    expect(desktopPreviewDocumentContentWidth(doc)).toBe(1440);
+    expect(
+      desktopPreviewAutoFitZoomPercent({ width: 900, height: 700 }, desktopPreviewDocumentContentWidth(doc)),
+    ).toBeCloseTo(62.5);
+  });
+
   it('only treats unmodified deck keyboard presses as deck shortcuts', () => {
     const base = { ctrlKey: false, altKey: false, metaKey: false, shiftKey: false };
 
