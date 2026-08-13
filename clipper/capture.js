@@ -234,10 +234,43 @@
 
   // --- Figma IR ------------------------------------------------------------
 
+  // Resolves any CSS colour the regex below cannot read — `oklch()`, `oklab()`,
+  // `lab()`, `color(display-p3 …)` — by letting the browser paint it into a 1x1
+  // canvas and reading the sRGB bytes back.
+  //
+  // Needed because `color-mix()` keeps its colour space in computed style:
+  // `color-mix(in oklch, …)` comes back as `oklch(…)`, not `rgb(…)`. Before
+  // this, every such fill was silently dropped — a dashboard whose cards, chart
+  // bars and status pills were all built with `color-mix()` imported with no
+  // backgrounds at all.
+  let colorProbeCtx = null;
+  function resolveColorViaCanvas(str) {
+    try {
+      if (!colorProbeCtx) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        colorProbeCtx = canvas.getContext('2d', { willReadFrequently: true });
+      }
+      if (!colorProbeCtx) return null;
+      colorProbeCtx.clearRect(0, 0, 1, 1);
+      colorProbeCtx.fillStyle = '#000';
+      colorProbeCtx.fillStyle = str;
+      // An unparseable value leaves fillStyle at the previous colour; treat that
+      // as "could not resolve" rather than painting everything black.
+      if (colorProbeCtx.fillStyle === '#000000' && !/^#0{3,8}$|black|rgba?\(\s*0[,\s]+0[,\s]+0/i.test(str)) return null;
+      colorProbeCtx.fillRect(0, 0, 1, 1);
+      const d = colorProbeCtx.getImageData(0, 0, 1, 1).data;
+      return { r: d[0] / 255, g: d[1] / 255, b: d[2] / 255, a: d[3] / 255 };
+    } catch (_) {
+      return null;
+    }
+  }
+
   function parseColor(str) {
     if (!str) return null;
     const m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?\s*\)/i.exec(str);
-    if (!m) return null;
+    if (!m) return resolveColorViaCanvas(str);
     const a = m[4] === undefined ? 1 : Number(m[4]);
     return {
       r: Math.min(1, Number(m[1]) / 255),
@@ -315,8 +348,65 @@
     return name;
   }
 
+  // Report the family the browser ACTUALLY rendered with, not the first name in
+  // the CSS stack.
+  //
+  // A stack like `"SF Pro Text", "Helvetica Neue", Arial, sans-serif` renders as
+  // Arial on Windows, and the widths we measure are Arial's. Recording "SF Pro
+  // Text" made Figma substitute a different (wider) face against Arial-sized
+  // boxes, so every label wrapped mid-word — "Perso / nas", "$482. / 760".
+  // Walking to the first *available* family keeps the name and the measurements
+  // describing the same typeface.
+  // `document.fonts.check()` is no use here: in Chromium it only knows about
+  // @font-face rules in the document and answers `true` for every locally
+  // installed-or-not family name. So measure instead — render a probe string in
+  // the candidate family against each generic fallback; if the width never
+  // differs from the fallback's, the family did not resolve and the browser is
+  // painting the fallback.
+  const FAMILY_PROBE = 'mmmmmmmmmmlliWWWW@';
+  const GENERIC_FAMILY_RE =
+    /^(sans-serif|serif|monospace|cursive|fantasy|system-ui|ui-(sans-serif|serif|monospace|rounded))$/i;
+  const familyAvailability = new Map();
+  let familyProbeCtx = null;
+  function familyIsAvailable(name) {
+    if (GENERIC_FAMILY_RE.test(name)) return true;
+    if (familyAvailability.has(name)) return familyAvailability.get(name);
+    let available = true;
+    try {
+      if (!familyProbeCtx) familyProbeCtx = document.createElement('canvas').getContext('2d');
+      if (familyProbeCtx) {
+        const quoted = '"' + name.replace(/"/g, '') + '"';
+        available = ['monospace', 'serif', 'sans-serif'].some(function (base) {
+          familyProbeCtx.font = '72px ' + base;
+          const baseline = familyProbeCtx.measureText(FAMILY_PROBE).width;
+          familyProbeCtx.font = '72px ' + quoted + ', ' + base;
+          return familyProbeCtx.measureText(FAMILY_PROBE).width !== baseline;
+        });
+      }
+    } catch (_) {
+      available = true;
+    }
+    familyAvailability.set(name, available);
+    return available;
+  }
+
   function firstFamily(fontFamily) {
-    return (fontFamily || 'Inter').split(',')[0].replace(/["']/g, '').trim() || 'Inter';
+    const stack = String(fontFamily || '')
+      .split(',')
+      .map((part) => part.replace(/["']/g, '').trim())
+      .filter(Boolean);
+    if (!stack.length) return 'Inter';
+    // Prefer a real installed family. Generic keywords (`ui-monospace`,
+    // `sans-serif`) are "available" to the browser but mean nothing to Figma,
+    // which would substitute again — so only fall back to one when the stack
+    // offers no concrete face.
+    for (let i = 0; i < stack.length; i += 1) {
+      if (!GENERIC_FAMILY_RE.test(stack[i]) && familyIsAvailable(stack[i])) return stack[i];
+    }
+    for (let i = 0; i < stack.length; i += 1) {
+      if (GENERIC_FAMILY_RE.test(stack[i])) return stack[i];
+    }
+    return stack[0];
   }
 
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'LINK', 'META', 'HEAD', 'TITLE', 'BR', 'svg', 'SVG']);

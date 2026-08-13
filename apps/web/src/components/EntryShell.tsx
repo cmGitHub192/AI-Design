@@ -1082,9 +1082,6 @@ export function EntryShell({
               <EntryUserMenu
                 userName={sessionProfile?.displayName ?? 'Usuario'}
                 userEmail={sessionProfile?.email}
-                idNumber={sessionProfile?.idNumber}
-                phone={sessionProfile?.phone}
-                gender={sessionProfile?.gender}
                 onOpenSettings={onOpenSettings}
                 onSignOut={() => {
                   void signOut();

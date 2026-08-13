@@ -4827,7 +4827,10 @@
   gap: 2px;
   padding: 8px 12px 14px;
   border-right: 1px solid var(--border);
-  background: #ffff;
+  /* Was a hard-coded `#ffff` (4-digit opaque white), which overrode the
+     themed rule above and left the sidebar white in dark mode while the rest
+     of the app followed the theme. */
+  background: var(--bg-panel);
 }
 .entry-nav-rail__group {
   align-items: stretch;
@@ -5451,39 +5454,6 @@
 .entry-user__role {
   font-size: 12.5px;
   color: var(--text-muted);
-}
-/* Profile fields captured at sign-up (email, identidad, teléfono, género).
-   Rows only render when the account has the value, so the list length varies. */
-.entry-user__details {
-  margin: 0;
-  padding: 12px 16px 14px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.entry-user__detail {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-}
-.entry-user__detail-label {
-  flex: 0 0 auto;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.entry-user__detail-value {
-  margin: 0;
-  min-width: 0;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text);
-  text-align: right;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .entry-user__actions {
   display: flex;

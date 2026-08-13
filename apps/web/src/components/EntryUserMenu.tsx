@@ -1,11 +1,11 @@
-// Account menu opened from the topbar avatar: shows the signed-in identity
-// (avatar, greeting, and the profile fields captured at sign-up) plus the
-// account actions — Configuración (opens Settings) and Cerrar Sesión.
+// Account menu opened from the topbar avatar: email, avatar, a greeting, and
+// the two account actions — Configuración (opens Settings) and Cerrar Sesión.
 //
 // Identity comes from the Supabase session via `useSessionProfile`; EntryShell
-// passes it down. Field labels reuse the existing `login.field.*` dictionary so
-// the menu names things exactly like the form that collected them, in all
-// supported locales.
+// passes it down. The sign-up fields (id number, phone, gender) are kept out on
+// purpose: this is a quick account switcher, not a profile page, and a menu
+// that prints someone's national id every time they reach for Settings is
+// needless exposure over the shoulder.
 
 import { useEffect, useRef, useState } from 'react';
 import { useT } from '../i18n';
@@ -16,10 +16,6 @@ interface Props {
   userEmail?: string;
   userRole?: string;
   userAvatarUrl?: string;
-  /** Raw `user_metadata` values from Supabase; omitted when never filled in. */
-  idNumber?: string;
-  phone?: string;
-  gender?: string;
   onOpenSettings: () => void;
   onSignOut?: () => void;
 }
@@ -36,23 +32,11 @@ function firstNameOf(name: string): string {
   return name.trim().split(/\s+/)[0] || name;
 }
 
-/** Gender is stored as a bare token; map it back to the form's own wording. */
-const GENDER_LABEL_KEYS = {
-  female: 'login.gender.female',
-  male: 'login.gender.male',
-  'non-binary': 'login.gender.nonBinary',
-  other: 'login.gender.other',
-  undisclosed: 'login.gender.undisclosed',
-} as const;
-
 export function EntryUserMenu({
   userName = 'Usuario',
   userEmail,
   userRole,
   userAvatarUrl,
-  idNumber,
-  phone,
-  gender,
   onOpenSettings,
   onSignOut,
 }: Props) {
@@ -69,16 +53,6 @@ export function EntryUserMenu({
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [open]);
-
-  // Only fields the account actually has: an empty row would read as missing
-  // data rather than as a field the user chose to skip at sign-up. Email is
-  // deliberately absent — the popover header already shows it.
-  const genderKey = gender ? GENDER_LABEL_KEYS[gender as keyof typeof GENDER_LABEL_KEYS] : undefined;
-  const details: Array<{ label: string; value: string }> = [
-    { label: t('login.field.idNumber'), value: idNumber ?? '' },
-    { label: t('login.field.phone'), value: phone ?? '' },
-    { label: t('login.field.gender'), value: genderKey ? t(genderKey) : gender ?? '' },
-  ].filter((row) => row.value !== '');
 
   const avatar = userAvatarUrl ? (
     <img src={userAvatarUrl} alt="" />
@@ -121,16 +95,6 @@ export function EntryUserMenu({
             <span className="entry-user__greeting">¡Hola, {firstNameOf(userName)}!</span>
             {userRole ? <span className="entry-user__role">{userRole}</span> : null}
           </div>
-          {details.length > 0 ? (
-            <dl className="entry-user__details">
-              {details.map(({ label, value }) => (
-                <div className="entry-user__detail" key={label}>
-                  <dt className="entry-user__detail-label">{label}</dt>
-                  <dd className="entry-user__detail-value">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
           <div className="entry-user__actions">
             <button
               type="button"
