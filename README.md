@@ -9,7 +9,7 @@
 
 ---
 
-## Qué es Diseniaa
+## Qué es Disenia
 
 🎨 **Un estudio de diseño local-first.** Describes un brief, eliges una plantilla y un design system, y un agente de código escribe el artefacto real (HTML/CSS de verdad, tipografías y componentes reales) que puedes previsualizar al instante y descargar.
 
