@@ -8,7 +8,7 @@ import '../src/index.css';
 import '../src/styles/home/index.css';
 
 /**
- * Disenia's heading face. `next/font/google` fetches it at build time and
+ * Diseniaaa's heading face. `next/font/google` fetches it at build time and
  * serves it from this origin, so the running app makes no request to Google
  * — the font is Google's, the delivery is ours. That keeps a self-hosted
  * install working offline and stops every viewer's IP reaching a third party.
